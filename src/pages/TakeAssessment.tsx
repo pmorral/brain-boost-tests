@@ -1,0 +1,153 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/hooks/use-toast";
+import { Timer, CheckCircle2 } from "lucide-react";
+
+const TakeAssessment = () => {
+  const { shareLink } = useParams();
+  const { toast } = useToast();
+  const [step, setStep] = useState<"info" | "test" | "complete">("info");
+  const [loading, setLoading] = useState(true);
+  const [assessment, setAssessment] = useState<any>(null);
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(50);
+  const [candidateId, setCandidateId] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [responses, setResponses] = useState<string[]>([]);
+  const [score, setScore] = useState(0);
+
+  useEffect(() => {
+    loadAssessment();
+  }, [shareLink]);
+
+  useEffect(() => {
+    if (step === "test" && timeLeft > 0) {
+      const timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (step === "test" && timeLeft === 0) {
+      handleAnswer("");
+    }
+  }, [step, timeLeft]);
+
+  const loadAssessment = async () => {
+    const { data, error } = await supabase
+      .from("assessments")
+      .select("*, assessment_questions(*)")
+      .eq("share_link", shareLink)
+      .single();
+
+    if (error || !data) {
+      toast({ title: "Error", description: "Evaluación no encontrada", variant: "destructive" });
+    } else {
+      setAssessment(data);
+      setQuestions(data.assessment_questions.sort((a: any, b: any) => a.question_number - b.question_number));
+    }
+    setLoading(false);
+  };
+
+  const startTest = async () => {
+    if (!fullName.trim() || !email.trim()) {
+      toast({ title: "Error", description: "Completa todos los campos", variant: "destructive" });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("candidates")
+      .insert([{ assessment_id: assessment.id, full_name: fullName, email, started_at: new Date().toISOString() }] as any)
+      .select()
+      .single();
+
+    if (error) {
+      toast({ title: "Error", description: "No se pudo iniciar la evaluación", variant: "destructive" });
+    } else {
+      setCandidateId(data.id);
+      setStep("test");
+    }
+  };
+
+  const handleAnswer = async (answer: string) => {
+    const question = questions[currentQuestion];
+    const isCorrect = answer === question.correct_answer;
+    
+    await supabase.from("candidate_responses").insert([{
+      candidate_id: candidateId,
+      question_id: question.id,
+      selected_answer: answer || "A",
+      is_correct: isCorrect,
+      time_taken_seconds: 50 - timeLeft,
+    }] as any);
+
+    const newScore = isCorrect ? score + 1 : score;
+    setScore(newScore);
+    setResponses([...responses, answer]);
+
+    if (currentQuestion < 19) {
+      setCurrentQuestion(currentQuestion + 1);
+      setTimeLeft(50);
+    } else {
+      await supabase.from("candidates").update({ completed_at: new Date().toISOString(), total_score: newScore }).eq("id", candidateId);
+      setStep("complete");
+    }
+  };
+
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-primary/5 flex items-center justify-center p-4">
+      {step === "info" && (
+        <Card className="w-full max-w-lg">
+          <CardHeader><CardTitle>{assessment.title}</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2"><Label>Nombre Completo</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
+            <div className="bg-muted p-4 rounded space-y-1 text-sm"><p>• 20 preguntas</p><p>• 50 segundos por pregunta</p><p>• No podrás volver atrás</p></div>
+            <Button onClick={startTest} className="w-full">Comenzar Evaluación</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === "test" && (
+        <Card className="w-full max-w-2xl">
+          <CardHeader>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-muted-foreground">Pregunta {currentQuestion + 1} de 20</span>
+              <div className="flex items-center gap-2 text-primary font-semibold"><Timer className="h-4 w-4" />{timeLeft}s</div>
+            </div>
+            <Progress value={(currentQuestion / 20) * 100} />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <CardTitle className="text-lg">{questions[currentQuestion]?.question_text}</CardTitle>
+            <div className="space-y-3">
+              {["A", "B", "C", "D"].map((option) => (
+                <Button key={option} variant="outline" className="w-full justify-start text-left h-auto py-4" onClick={() => handleAnswer(option)}>
+                  <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === "complete" && (
+        <Card className="w-full max-w-lg text-center">
+          <CardContent className="pt-8 space-y-6">
+            <CheckCircle2 className="h-16 w-16 text-secondary mx-auto" />
+            <div><h2 className="text-3xl font-bold">¡Evaluación Completada!</h2><p className="text-muted-foreground mt-2">Gracias por completar la evaluación</p></div>
+            <div className="bg-primary/10 rounded-lg p-6"><div className="text-5xl font-bold text-primary">{score}/20</div><div className="text-sm text-muted-foreground mt-2">Respuestas correctas</div><div className="text-2xl font-semibold text-primary mt-2">{Math.round((score / 20) * 100)}%</div></div>
+            <p className="text-sm text-muted-foreground">Los resultados han sido enviados al reclutador.</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+export default TakeAssessment;
