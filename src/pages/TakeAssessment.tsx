@@ -87,6 +87,37 @@ const TakeAssessment = () => {
     }
   }, [step, timeLeft]);
 
+  useEffect(() => {
+    if (step !== "test") return;
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        toast({
+          title: "Evaluación Terminada",
+          description: "Saliste de la pestaña. La evaluación ha finalizado.",
+          variant: "destructive",
+        });
+
+        // Terminar la evaluación inmediatamente
+        await supabase
+          .from("candidates")
+          .update({
+            completed_at: new Date().toISOString(),
+            total_score: score,
+          })
+          .eq("id", candidateId);
+
+        setStep("complete");
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [step, candidateId, score, toast]);
+
   const loadAssessment = async () => {
     try {
       const { data, error } = await supabase
@@ -180,7 +211,7 @@ const TakeAssessment = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2"><Label>Nombre Completo</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-            <div className="bg-muted p-4 rounded space-y-1 text-sm"><p>• 20 preguntas</p><p>• 40 segundos por pregunta</p><p>• No podrás volver atrás</p><p>• Sin capturas de pantalla ni copiar</p></div>
+            <div className="bg-muted p-4 rounded space-y-1 text-sm"><p>• 20 preguntas</p><p>• 40 segundos por pregunta</p><p>• No podrás volver atrás</p><p>• Sin capturas de pantalla ni copiar</p><p>• ⚠️ Si sales de esta pestaña, la prueba terminará</p></div>
             <Button onClick={startTest} className="w-full">Comenzar Evaluación</Button>
           </CardContent>
         </Card>
