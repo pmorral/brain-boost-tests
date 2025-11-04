@@ -38,17 +38,26 @@ const TakeAssessment = () => {
   }, [step, timeLeft]);
 
   const loadAssessment = async () => {
-    const { data, error } = await supabase
-      .from("assessments")
-      .select("*, assessment_questions(*)")
-      .eq("share_link", shareLink)
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from("assessments")
+        .select("*, assessment_questions(*)")
+        .eq("share_link", shareLink)
+        .maybeSingle();
 
-    if (error || !data) {
-      toast({ title: "Error", description: "Evaluación no encontrada", variant: "destructive" });
-    } else {
-      setAssessment(data);
-      setQuestions(data.assessment_questions.sort((a: any, b: any) => a.question_number - b.question_number));
+      if (error) {
+        console.error("Error loading assessment:", error);
+        toast({ title: "Error", description: "Error al cargar la evaluación", variant: "destructive" });
+      } else if (!data) {
+        toast({ title: "Error", description: "Evaluación no encontrada", variant: "destructive" });
+      } else {
+        setAssessment(data);
+        const sortedQuestions = data.assessment_questions?.sort((a: any, b: any) => a.question_number - b.question_number) || [];
+        setQuestions(sortedQuestions);
+      }
+    } catch (err) {
+      console.error("Exception loading assessment:", err);
+      toast({ title: "Error", description: "Error inesperado al cargar la evaluación", variant: "destructive" });
     }
     setLoading(false);
   };
@@ -100,11 +109,24 @@ const TakeAssessment = () => {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div></div>;
 
+  if (!assessment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted to-primary/5 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg text-center">
+          <CardContent className="pt-8 space-y-4">
+            <h2 className="text-2xl font-bold">Evaluación no encontrada</h2>
+            <p className="text-muted-foreground">El link que estás intentando usar no es válido o la evaluación ya no está disponible.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted to-primary/5 flex items-center justify-center p-4">
       {step === "info" && (
         <Card className="w-full max-w-lg">
-          <CardHeader><CardTitle>{assessment.title}</CardTitle></CardHeader>
+          <CardHeader><CardTitle>{assessment?.title}</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2"><Label>Nombre Completo</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
