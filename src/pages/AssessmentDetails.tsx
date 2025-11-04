@@ -201,7 +201,7 @@ const AssessmentDetails = () => {
                 </div>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p>• Los candidatos no necesitan cuenta</p>
-                  <p>• 20 preguntas con 50 segundos cada una</p>
+                  <p>• 20 preguntas con 40 segundos cada una</p>
                   <p>• Los resultados aparecen automáticamente aquí</p>
                 </div>
               </CardContent>

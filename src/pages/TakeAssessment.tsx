@@ -17,7 +17,7 @@ const TakeAssessment = () => {
   const [assessment, setAssessment] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(50);
+  const [timeLeft, setTimeLeft] = useState(40);
   const [candidateId, setCandidateId] = useState("");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -26,7 +26,57 @@ const TakeAssessment = () => {
 
   useEffect(() => {
     loadAssessment();
-  }, [shareLink]);
+    
+    // Prevent screenshots and screen recording
+    const preventScreenCapture = () => {
+      document.addEventListener('keyup', (e) => {
+        // Prevent Print Screen
+        if (e.key === 'PrintScreen') {
+          navigator.clipboard.writeText('');
+          toast({ title: "Advertencia", description: "Las capturas de pantalla están deshabilitadas", variant: "destructive" });
+        }
+      });
+      
+      // Prevent common screenshot shortcuts
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey && e.shiftKey && (e.key === 'S' || e.key === 's')) ||
+            (e.metaKey && e.shiftKey && (e.key === '3' || e.key === '4' || e.key === '5'))) {
+          e.preventDefault();
+          toast({ title: "Advertencia", description: "Las capturas de pantalla están deshabilitadas", variant: "destructive" });
+        }
+      });
+    };
+
+    // Disable right-click
+    const disableRightClick = (e: MouseEvent) => {
+      e.preventDefault();
+      toast({ title: "Advertencia", description: "Clic derecho deshabilitado", variant: "destructive" });
+    };
+
+    // Disable copy
+    const disableCopy = (e: ClipboardEvent) => {
+      e.preventDefault();
+      toast({ title: "Advertencia", description: "Copiar texto está deshabilitado", variant: "destructive" });
+    };
+
+    // Disable text selection
+    const disableSelection = () => {
+      document.body.style.userSelect = 'none';
+      document.body.style.webkitUserSelect = 'none';
+    };
+
+    preventScreenCapture();
+    document.addEventListener('contextmenu', disableRightClick);
+    document.addEventListener('copy', disableCopy);
+    disableSelection();
+
+    return () => {
+      document.removeEventListener('contextmenu', disableRightClick);
+      document.removeEventListener('copy', disableCopy);
+      document.body.style.userSelect = '';
+      document.body.style.webkitUserSelect = '';
+    };
+  }, [shareLink, toast]);
 
   useEffect(() => {
     if (step === "test" && timeLeft > 0) {
@@ -91,7 +141,7 @@ const TakeAssessment = () => {
       question_id: question.id,
       selected_answer: answer || "A",
       is_correct: isCorrect,
-      time_taken_seconds: 50 - timeLeft,
+      time_taken_seconds: 40 - timeLeft,
     }] as any);
 
     const newScore = isCorrect ? score + 1 : score;
@@ -100,7 +150,7 @@ const TakeAssessment = () => {
 
     if (currentQuestion < 19) {
       setCurrentQuestion(currentQuestion + 1);
-      setTimeLeft(50);
+      setTimeLeft(40);
     } else {
       await supabase.from("candidates").update({ completed_at: new Date().toISOString(), total_score: newScore }).eq("id", candidateId);
       setStep("complete");
@@ -130,7 +180,7 @@ const TakeAssessment = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2"><Label>Nombre Completo</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-            <div className="bg-muted p-4 rounded space-y-1 text-sm"><p>• 20 preguntas</p><p>• 50 segundos por pregunta</p><p>• No podrás volver atrás</p></div>
+            <div className="bg-muted p-4 rounded space-y-1 text-sm"><p>• 20 preguntas</p><p>• 40 segundos por pregunta</p><p>• No podrás volver atrás</p><p>• Sin capturas de pantalla ni copiar</p></div>
             <Button onClick={startTest} className="w-full">Comenzar Evaluación</Button>
           </CardContent>
         </Card>

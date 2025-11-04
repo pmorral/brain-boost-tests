@@ -35,11 +35,16 @@ serve(async (req) => {
 
     if (assessmentType === 'skills') {
       systemPrompt = language === 'en'
-        ? `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 20 multiple-choice questions based on the following requirements: ${topic}. ${languageInstruction}`
-        : `Eres un experto creador de evaluaciones especializado en habilidades técnicas y blandas. Genera 20 preguntas de opción múltiple basadas en los siguientes requisitos: ${topic}. ${languageInstruction}`;
+        ? `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 20 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT and DIRECT. ${languageInstruction}`
+        : `Eres un experto creador de evaluaciones especializado en habilidades técnicas y blandas. Genera 20 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS y DIRECTAS. ${languageInstruction}`;
       
       userPrompt = language === 'en'
-        ? `Create 20 assessment questions based on: ${topic}
+        ? `Create 20 CONCISE assessment questions based on: ${topic}
+
+CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
+- Question text: Maximum 2 lines
+- Answer options: Maximum 1 line each
+- Use simple, direct language
 
 Analyze the requirements to determine the appropriate mix of:
 - Technical/hard skills questions (testing practical knowledge, problem-solving, best practices)
@@ -47,25 +52,30 @@ Analyze the requirements to determine the appropriate mix of:
 - Consider the seniority level mentioned to adjust difficulty appropriately
 
 Each question must have:
-- A clear, specific question (technical questions should focus on practical scenarios; soft skills questions should present realistic workplace situations)
-- 4 answer options (A, B, C, D)
+- A BRIEF, clear question (no long scenarios or context)
+- 4 SHORT answer options (A, B, C, D)
 - Exactly one correct answer
 - Progressive difficulty throughout the assessment
 
 Format each question as JSON:
 {
-  "question": "question text",
+  "question": "brief question text",
   "options": {
-    "A": "option A text",
-    "B": "option B text", 
-    "C": "option C text",
-    "D": "option D text"
+    "A": "short option A",
+    "B": "short option B", 
+    "C": "short option C",
+    "D": "short option D"
   },
   "correct": "A/B/C/D"
 }
 
 Return ONLY a JSON array of 20 questions. ${languageInstruction}`
-        : `Crea 20 preguntas de evaluación basadas en: ${topic}
+        : `Crea 20 preguntas CONCISAS de evaluación basadas en: ${topic}
+
+CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
+- Texto de pregunta: Máximo 2 líneas
+- Opciones de respuesta: Máximo 1 línea cada una
+- Usa lenguaje simple y directo
 
 Analiza los requisitos para determinar la combinación apropiada de:
 - Preguntas de habilidades técnicas/hard skills (evaluando conocimiento práctico, resolución de problemas, mejores prácticas)
@@ -73,19 +83,19 @@ Analiza los requisitos para determinar la combinación apropiada de:
 - Considera el nivel de seniority mencionado para ajustar la dificultad apropiadamente
 
 Cada pregunta debe tener:
-- Una pregunta clara y específica (las preguntas técnicas deben enfocarse en escenarios prácticos; las preguntas de soft skills deben presentar situaciones laborales realistas)
-- 4 opciones de respuesta (A, B, C, D)
+- Una pregunta BREVE y clara (sin escenarios largos o contexto extenso)
+- 4 opciones de respuesta CORTAS (A, B, C, D)
 - Exactamente una respuesta correcta
 - Dificultad progresiva a lo largo de la evaluación
 
 Formatea cada pregunta como JSON:
 {
-  "question": "texto de la pregunta",
+  "question": "texto breve de la pregunta",
   "options": {
-    "A": "texto de opción A",
-    "B": "texto de opción B", 
-    "C": "texto de opción C",
-    "D": "texto de opción D"
+    "A": "opción A corta",
+    "B": "opción B corta", 
+    "C": "opción C corta",
+    "D": "opción D corta"
   },
   "correct": "A/B/C/D"
 }
@@ -107,51 +117,59 @@ Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
 
       const psychDesc = psychometricPrompts[psychometricType || 'mbti'];
       systemPrompt = language === 'en'
-        ? `You are an expert psychometric test designer. Generate 20 multiple-choice questions for a ${psychometricType?.toUpperCase()} assessment. ${languageInstruction}`
-        : `Eres un diseñador experto en pruebas psicométricas. Genera 20 preguntas de opción múltiple para una evaluación ${psychometricType?.toUpperCase()}. ${languageInstruction}`;
+        ? `You are an expert psychometric test designer. Generate 20 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT. ${languageInstruction}`
+        : `Eres un diseñador experto en pruebas psicométricas. Genera 20 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS. ${languageInstruction}`;
       
       userPrompt = language === 'en'
-        ? `Create 20 psychometric questions for ${psychometricType?.toUpperCase()} assessment.
+        ? `Create 20 CONCISE psychometric questions for ${psychometricType?.toUpperCase()} assessment.
+
+CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
+- Question text: Maximum 2 lines
+- Answer options: Maximum 1 line each
 
 Focus on: ${psychDesc}
 
 Each question must:
-- Be carefully worded to assess specific psychological traits
-- Have 4 answer options with varying degrees of the measured trait
+- Be BRIEFLY worded to assess specific psychological traits
+- Have 4 SHORT answer options with varying degrees of the measured trait
 - One answer should be most indicative of the trait being measured
 - Be professionally appropriate and unbiased
 
 Format each question as JSON:
 {
-  "question": "question text",
+  "question": "brief question text",
   "options": {
-    "A": "option A",
-    "B": "option B",
-    "C": "option C",
-    "D": "option D"
+    "A": "short option A",
+    "B": "short option B",
+    "C": "short option C",
+    "D": "short option D"
   },
   "correct": "A/B/C/D"
 }
 
 Return ONLY a JSON array of 20 questions. ${languageInstruction}`
-        : `Crea 20 preguntas psicométricas para la evaluación ${psychometricType?.toUpperCase()}.
+        : `Crea 20 preguntas psicométricas CONCISAS para la evaluación ${psychometricType?.toUpperCase()}.
+
+CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
+- Texto de pregunta: Máximo 2 líneas
+- Opciones de respuesta: Máximo 1 línea cada una
 
 Enfócate en: ${psychDesc}
 
 Cada pregunta debe:
-- Estar cuidadosamente redactada para evaluar rasgos psicológicos específicos
-- Tener 4 opciones de respuesta con diferentes grados del rasgo medido
+- Estar redactada BREVEMENTE para evaluar rasgos psicológicos específicos
+- Tener 4 opciones de respuesta CORTAS con diferentes grados del rasgo medido
 - Una respuesta debe ser la más indicativa del rasgo que se está midiendo
 - Ser profesionalmente apropiada e imparcial
 
 Formatea cada pregunta como JSON:
 {
-  "question": "texto de la pregunta",
+  "question": "texto breve de la pregunta",
   "options": {
-    "A": "opción A",
-    "B": "opción B",
-    "C": "opción C",
-    "D": "opción D"
+    "A": "opción A corta",
+    "B": "opción B corta",
+    "C": "opción C corta",
+    "D": "opción D corta"
   },
   "correct": "A/B/C/D"
 }
