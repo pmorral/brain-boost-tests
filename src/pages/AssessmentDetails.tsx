@@ -43,7 +43,10 @@ const AssessmentDetails = () => {
   const loadCandidates = async () => {
     const { data, error } = await supabase
       .from("candidates")
-      .select("*")
+      .select(`
+        *,
+        candidate_responses(count)
+      `)
       .eq("assessment_id", id)
       .order("created_at", { ascending: false });
 
@@ -134,42 +137,57 @@ const AssessmentDetails = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {candidates.map((candidate) => (
-                      <Card key={candidate.id} className="overflow-hidden">
-                        <CardContent className="pt-6">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              <h4 className="font-semibold">{candidate.full_name}</h4>
-                              <p className="text-sm text-muted-foreground">{candidate.email}</p>
-                              <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                                <span>Iniciado: {new Date(candidate.started_at).toLocaleString()}</span>
-                                {candidate.completed_at && (
-                                  <span>Completado: {new Date(candidate.completed_at).toLocaleString()}</span>
+                    {candidates.map((candidate) => {
+                      const questionsAnswered = candidate.candidate_responses?.[0]?.count || 0;
+                      const wasInterrupted = candidate.completed_at && questionsAnswered < 20;
+                      
+                      return (
+                        <Card key={candidate.id} className="overflow-hidden">
+                          <CardContent className="pt-6">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <h4 className="font-semibold">{candidate.full_name}</h4>
+                                <p className="text-sm text-muted-foreground">{candidate.email}</p>
+                                <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                                  <span>Iniciado: {new Date(candidate.started_at).toLocaleString()}</span>
+                                  {candidate.completed_at && (
+                                    <span>Completado: {new Date(candidate.completed_at).toLocaleString()}</span>
+                                  )}
+                                </div>
+                                {wasInterrupted && (
+                                  <div className="mt-2 bg-amber-50 dark:bg-amber-950 border border-amber-500 rounded px-3 py-2">
+                                    <p className="text-xs font-semibold text-amber-900 dark:text-amber-100">
+                                      ⚠️ Evaluación interrumpida: El candidato salió de la pestaña o violó las medidas de seguridad.
+                                    </p>
+                                    <p className="text-xs text-amber-800 dark:text-amber-200 mt-1">
+                                      Respondió solo {questionsAnswered} de 20 preguntas
+                                    </p>
+                                  </div>
                                 )}
                               </div>
-                            </div>
-                            {candidate.completed_at ? (
-                              <div className="flex flex-col items-center gap-1">
-                                <Award className="h-8 w-8 text-primary" />
-                                <div className="text-center">
-                                  <div className="text-2xl font-bold">
-                                    {candidate.total_score || 0}
+                              {candidate.completed_at ? (
+                                <div className="flex flex-col items-center gap-1">
+                                  <Award className="h-8 w-8 text-primary" />
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold">
+                                      {candidate.total_score || 0}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">/ 20</div>
                                   </div>
-                                  <div className="text-xs text-muted-foreground">/ 20</div>
+                                  <div className="text-xs font-semibold text-primary">
+                                    {Math.round(((candidate.total_score || 0) / 20) * 100)}%
+                                  </div>
                                 </div>
-                                <div className="text-xs font-semibold text-primary">
-                                  {Math.round(((candidate.total_score || 0) / 20) * 100)}%
+                              ) : (
+                                <div className="text-sm text-amber-600 font-medium">
+                                  En progreso...
                                 </div>
-                              </div>
-                            ) : (
-                              <div className="text-sm text-amber-600 font-medium">
-                                En progreso...
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
