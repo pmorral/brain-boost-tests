@@ -69,6 +69,7 @@ export type Database = {
           description: string | null
           expires_at: string | null
           id: string
+          language: string
           psychometric_type:
             | Database["public"]["Enums"]["psychometric_test_type"]
             | null
@@ -83,6 +84,7 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          language?: string
           psychometric_type?:
             | Database["public"]["Enums"]["psychometric_test_type"]
             | null
@@ -97,6 +99,7 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          language?: string
           psychometric_type?:
             | Database["public"]["Enums"]["psychometric_test_type"]
             | null

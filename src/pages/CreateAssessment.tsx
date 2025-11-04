@@ -29,6 +29,7 @@ const CreateAssessment = () => {
   const [psychometricType, setPsychometricType] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [language, setLanguage] = useState<"es" | "en">("es");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -67,6 +68,7 @@ const CreateAssessment = () => {
           assessment_type: assessmentType,
           custom_topic: assessmentType === "skills" ? description : null,
           psychometric_type: psychometricType || null,
+          language,
         }] as any)
         .select()
         .single();
@@ -87,6 +89,7 @@ const CreateAssessment = () => {
             assessmentType,
             topic: assessmentType === "skills" ? description : null,
             psychometricType,
+            language,
           },
         }
       );
@@ -158,6 +161,21 @@ const CreateAssessment = () => {
                   </SelectContent>
                 </Select>
               </div>
+
+              {assessmentType && (
+                <div className="space-y-2">
+                  <Label htmlFor="language">Idioma de las Preguntas *</Label>
+                  <Select value={language} onValueChange={(value: "es" | "en") => setLanguage(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="es">Español</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
               {assessmentType === "skills" && (
                 <>

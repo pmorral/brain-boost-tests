@@ -12,9 +12,9 @@ serve(async (req) => {
   }
 
   try {
-    const { assessmentId, assessmentType, topic, psychometricType } = await req.json();
+    const { assessmentId, assessmentType, topic, psychometricType, language = 'es' } = await req.json();
     
-    console.log('Generating questions for:', { assessmentId, assessmentType, topic, psychometricType });
+    console.log('Generating questions for:', { assessmentId, assessmentType, topic, psychometricType, language });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -26,13 +26,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Build the prompt based on assessment type
+    // Build the prompt based on assessment type and language
     let systemPrompt = '';
     let userPrompt = '';
+    const languageInstruction = language === 'en' 
+      ? 'Generate all questions and answers in English.' 
+      : 'Genera todas las preguntas y respuestas en español.';
 
     if (assessmentType === 'skills') {
-      systemPrompt = `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 20 multiple-choice questions based on the following requirements: ${topic}`;
-      userPrompt = `Create 20 assessment questions based on: ${topic}
+      systemPrompt = language === 'en'
+        ? `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 20 multiple-choice questions based on the following requirements: ${topic}. ${languageInstruction}`
+        : `Eres un experto creador de evaluaciones especializado en habilidades técnicas y blandas. Genera 20 preguntas de opción múltiple basadas en los siguientes requisitos: ${topic}. ${languageInstruction}`;
+      
+      userPrompt = language === 'en'
+        ? `Create 20 assessment questions based on: ${topic}
 
 Analyze the requirements to determine the appropriate mix of:
 - Technical/hard skills questions (testing practical knowledge, problem-solving, best practices)
@@ -57,7 +64,33 @@ Format each question as JSON:
   "correct": "A/B/C/D"
 }
 
-Return ONLY a JSON array of 20 questions.`;
+Return ONLY a JSON array of 20 questions. ${languageInstruction}`
+        : `Crea 20 preguntas de evaluación basadas en: ${topic}
+
+Analiza los requisitos para determinar la combinación apropiada de:
+- Preguntas de habilidades técnicas/hard skills (evaluando conocimiento práctico, resolución de problemas, mejores prácticas)
+- Preguntas de habilidades blandas/soft skills (evaluando capacidades interpersonales, inteligencia emocional, comportamiento profesional)
+- Considera el nivel de seniority mencionado para ajustar la dificultad apropiadamente
+
+Cada pregunta debe tener:
+- Una pregunta clara y específica (las preguntas técnicas deben enfocarse en escenarios prácticos; las preguntas de soft skills deben presentar situaciones laborales realistas)
+- 4 opciones de respuesta (A, B, C, D)
+- Exactamente una respuesta correcta
+- Dificultad progresiva a lo largo de la evaluación
+
+Formatea cada pregunta como JSON:
+{
+  "question": "texto de la pregunta",
+  "options": {
+    "A": "texto de opción A",
+    "B": "texto de opción B", 
+    "C": "texto de opción C",
+    "D": "texto de opción D"
+  },
+  "correct": "A/B/C/D"
+}
+
+Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
     } else if (assessmentType === 'psychometric') {
       const psychometricPrompts: Record<string, string> = {
         mbti: 'Myers-Briggs Type Indicator questions assessing personality preferences (Extraversion/Introversion, Sensing/Intuition, Thinking/Feeling, Judging/Perceiving)',
@@ -73,8 +106,12 @@ Return ONLY a JSON array of 20 questions.`;
       };
 
       const psychDesc = psychometricPrompts[psychometricType || 'mbti'];
-      systemPrompt = `You are an expert psychometric test designer. Generate 20 multiple-choice questions for a ${psychometricType?.toUpperCase()} assessment.`;
-      userPrompt = `Create 20 psychometric questions for ${psychometricType?.toUpperCase()} assessment.
+      systemPrompt = language === 'en'
+        ? `You are an expert psychometric test designer. Generate 20 multiple-choice questions for a ${psychometricType?.toUpperCase()} assessment. ${languageInstruction}`
+        : `Eres un diseñador experto en pruebas psicométricas. Genera 20 preguntas de opción múltiple para una evaluación ${psychometricType?.toUpperCase()}. ${languageInstruction}`;
+      
+      userPrompt = language === 'en'
+        ? `Create 20 psychometric questions for ${psychometricType?.toUpperCase()} assessment.
 
 Focus on: ${psychDesc}
 
@@ -96,7 +133,30 @@ Format each question as JSON:
   "correct": "A/B/C/D"
 }
 
-Return ONLY a JSON array of 20 questions.`;
+Return ONLY a JSON array of 20 questions. ${languageInstruction}`
+        : `Crea 20 preguntas psicométricas para la evaluación ${psychometricType?.toUpperCase()}.
+
+Enfócate en: ${psychDesc}
+
+Cada pregunta debe:
+- Estar cuidadosamente redactada para evaluar rasgos psicológicos específicos
+- Tener 4 opciones de respuesta con diferentes grados del rasgo medido
+- Una respuesta debe ser la más indicativa del rasgo que se está midiendo
+- Ser profesionalmente apropiada e imparcial
+
+Formatea cada pregunta como JSON:
+{
+  "question": "texto de la pregunta",
+  "options": {
+    "A": "opción A",
+    "B": "opción B",
+    "C": "opción C",
+    "D": "opción D"
+  },
+  "correct": "A/B/C/D"
+}
+
+Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
     }
 
     // Call Lovable AI
