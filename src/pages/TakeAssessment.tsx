@@ -211,8 +211,29 @@ const TakeAssessment = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2"><Label>Nombre Completo</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} /></div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></div>
-            <div className="bg-muted p-4 rounded space-y-1 text-sm"><p>• 20 preguntas</p><p>• 40 segundos por pregunta</p><p>• No podrás volver atrás</p><p>• Sin capturas de pantalla ni copiar</p><p>• ⚠️ Si sales de esta pestaña, la prueba terminará</p></div>
-            <Button onClick={startTest} className="w-full">Comenzar Evaluación</Button>
+            
+            <div className="bg-amber-50 dark:bg-amber-950 border-2 border-amber-500 rounded-lg p-4 space-y-2">
+              <h3 className="font-bold text-amber-900 dark:text-amber-100 flex items-center gap-2">
+                ⚠️ Medidas de Seguridad Obligatorias
+              </h3>
+              <ul className="text-sm text-amber-800 dark:text-amber-200 space-y-1 list-disc list-inside">
+                <li>Esta evaluación está protegida contra fraudes</li>
+                <li>Las capturas de pantalla están bloqueadas</li>
+                <li>No puedes copiar ni pegar texto</li>
+                <li>Si cambias de pestaña, la prueba terminará automáticamente</li>
+                <li><strong>PROHIBIDO usar ayuda de terceros o herramientas externas</strong></li>
+                <li>Cualquier violación será detectada y reportada</li>
+              </ul>
+            </div>
+
+            <div className="bg-muted p-4 rounded space-y-1 text-sm">
+              <p className="font-semibold mb-2">Detalles de la Evaluación:</p>
+              <p>• 20 preguntas</p>
+              <p>• 40 segundos por pregunta</p>
+              <p>• No podrás volver atrás</p>
+            </div>
+            
+            <Button onClick={startTest} className="w-full">Acepto las Condiciones - Comenzar Evaluación</Button>
           </CardContent>
         </Card>
       )}
