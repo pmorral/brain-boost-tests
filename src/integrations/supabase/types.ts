@@ -224,7 +224,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      assessment_type: "hard_skills" | "soft_skills" | "psychometric"
+      assessment_type: "skills" | "psychometric"
       psychometric_test_type:
         | "mbti"
         | "disc"
@@ -363,7 +363,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      assessment_type: ["hard_skills", "soft_skills", "psychometric"],
+      assessment_type: ["skills", "psychometric"],
       psychometric_test_type: [
         "mbti",
         "disc",

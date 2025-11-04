@@ -30,13 +30,20 @@ serve(async (req) => {
     let systemPrompt = '';
     let userPrompt = '';
 
-    if (assessmentType === 'hard_skills') {
-      systemPrompt = `You are an expert technical assessment creator. Generate 20 multiple-choice questions to evaluate ${topic} hard skills. Each question should test practical knowledge and problem-solving abilities.`;
-      userPrompt = `Create 20 technical questions about ${topic}. Each question must have:
-- A clear, specific question
+    if (assessmentType === 'skills') {
+      systemPrompt = `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 20 multiple-choice questions based on the following requirements: ${topic}`;
+      userPrompt = `Create 20 assessment questions based on: ${topic}
+
+Analyze the requirements to determine the appropriate mix of:
+- Technical/hard skills questions (testing practical knowledge, problem-solving, best practices)
+- Soft skills questions (testing interpersonal abilities, emotional intelligence, professional behavior)
+- Consider the seniority level mentioned to adjust difficulty appropriately
+
+Each question must have:
+- A clear, specific question (technical questions should focus on practical scenarios; soft skills questions should present realistic workplace situations)
 - 4 answer options (A, B, C, D)
 - Exactly one correct answer
-- Progressive difficulty (start easier, get harder)
+- Progressive difficulty throughout the assessment
 
 Format each question as JSON:
 {
@@ -46,29 +53,6 @@ Format each question as JSON:
     "B": "option B text", 
     "C": "option C text",
     "D": "option D text"
-  },
-  "correct": "A/B/C/D"
-}
-
-Return ONLY a JSON array of 20 questions.`;
-    } else if (assessmentType === 'soft_skills') {
-      systemPrompt = `You are an expert in soft skills assessment. Generate 20 scenario-based multiple-choice questions to evaluate ${topic} soft skills.`;
-      userPrompt = `Create 20 soft skills questions about ${topic}. Each question should present a workplace scenario and evaluate skills like communication, teamwork, leadership, problem-solving, etc.
-
-Each question must have:
-- A realistic workplace scenario
-- 4 answer options representing different approaches
-- One best answer based on professional best practices
-- Progressive complexity
-
-Format each question as JSON:
-{
-  "question": "scenario description and question",
-  "options": {
-    "A": "approach A",
-    "B": "approach B",
-    "C": "approach C",
-    "D": "approach D"
   },
   "correct": "A/B/C/D"
 }
