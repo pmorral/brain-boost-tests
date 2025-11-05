@@ -359,20 +359,26 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant={selectedAnswer === option ? "default" : "outline"} 
-                      className="w-full justify-start text-left h-auto py-4" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal" 
                       onClick={() => handleAnswer(option)}
                     >
-                      <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
+                      <div className="flex items-start gap-3 w-full">
+                        <span className="font-bold flex-shrink-0">{option}.</span>
+                        <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
+                      </div>
                     </Button>
                   ))
                 : ["A", "B", "C", "D"].map((option) => (
                     <Button 
                       key={option} 
                       variant={selectedAnswer === option ? "default" : "outline"} 
-                      className="w-full justify-start text-left h-auto py-4" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal" 
                       onClick={() => handleAnswer(option)}
                     >
-                      <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
+                      <div className="flex items-start gap-3 w-full">
+                        <span className="font-bold flex-shrink-0">{option}.</span>
+                        <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
+                      </div>
                     </Button>
                   ))
               }
