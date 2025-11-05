@@ -386,7 +386,7 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant="outline"
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:border-foreground/30 focus:bg-transparent focus:border-input focus-visible:ring-0 active:bg-transparent" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:!bg-transparent hover:!text-foreground hover:border-foreground/30 focus:!bg-transparent focus:border-input focus-visible:ring-0 active:!bg-transparent" 
                       onClick={() => handleAnswer(option)}
                       type="button"
                     >
@@ -400,7 +400,7 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant="outline"
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:border-foreground/30 focus:bg-transparent focus:border-input focus-visible:ring-0 active:bg-transparent" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:!bg-transparent hover:!text-foreground hover:border-foreground/30 focus:!bg-transparent focus:border-input focus-visible:ring-0 active:!bg-transparent" 
                       onClick={() => handleAnswer(option)}
                       type="button"
                     >
