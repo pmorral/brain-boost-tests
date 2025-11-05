@@ -216,25 +216,22 @@ const TakeAssessment = () => {
       setCurrentQuestion(currentQuestion + 1);
       setTimeLeft(40);
     } else {
-      // For Likert assessments, don't save a score
+      // Show complete screen immediately
+      setStep("complete");
+      
+      // Save data in background (no await)
       const finalScore = isLikert ? null : newScore;
-      await supabase.from("candidates").update({ 
+      supabase.from("candidates").update({ 
         completed_at: new Date().toISOString(), 
         total_score: finalScore 
       }).eq("id", candidateId);
       
-      // If it's a Likert assessment, trigger AI analysis
+      // If it's a Likert assessment, trigger AI analysis in background
       if (isLikert) {
-        try {
-          await supabase.functions.invoke('analyze-psychometric', {
-            body: { candidateId }
-          });
-        } catch (error) {
-          console.error('Error triggering psychometric analysis:', error);
-        }
+        supabase.functions.invoke('analyze-psychometric', {
+          body: { candidateId }
+        }).catch(error => console.error('Error triggering psychometric analysis:', error));
       }
-      
-      setStep("complete");
     }
   };
 
