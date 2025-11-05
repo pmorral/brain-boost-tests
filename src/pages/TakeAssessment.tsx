@@ -24,19 +24,7 @@ const TakeAssessment = () => {
   const [responses, setResponses] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const isCompletedRef = useRef(false);
-
-  // Reset selected answer when question changes
-  useEffect(() => {
-    console.log('Question changed to:', currentQuestion, '- Resetting selectedAnswer');
-    setSelectedAnswer("");
-  }, [currentQuestion]);
-
-  // Log selectedAnswer changes
-  useEffect(() => {
-    console.log('selectedAnswer changed to:', selectedAnswer);
-  }, [selectedAnswer]);
 
   useEffect(() => {
     // Detect if device is mobile
@@ -113,11 +101,6 @@ const TakeAssessment = () => {
       handleAnswer("");
     }
   }, [step, timeLeft]);
-
-  // Reset selected answer when question changes
-  useEffect(() => {
-    setSelectedAnswer("");
-  }, [currentQuestion]);
 
   useEffect(() => {
     if (step !== "test") return;
@@ -228,8 +211,6 @@ const TakeAssessment = () => {
   };
 
   const handleAnswer = async (answer: string) => {
-    setSelectedAnswer(answer);
-    
     // Small visual delay so user sees their selection
     await new Promise(resolve => setTimeout(resolve, 150));
     
@@ -393,7 +374,7 @@ const TakeAssessment = () => {
                 ? ["A", "B", "C", "D", "E"].map((option) => (
                     <Button 
                       key={option} 
-                      variant={selectedAnswer === option ? "default" : "outline"} 
+                      variant="outline"
                       className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal focus:ring-0 focus-visible:ring-2" 
                       onClick={() => handleAnswer(option)}
                       onMouseDown={(e) => e.preventDefault()}
@@ -408,7 +389,7 @@ const TakeAssessment = () => {
                 : ["A", "B", "C", "D"].map((option) => (
                     <Button 
                       key={option} 
-                      variant={selectedAnswer === option ? "default" : "outline"} 
+                      variant="outline"
                       className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal focus:ring-0 focus-visible:ring-2" 
                       onClick={() => handleAnswer(option)}
                       onMouseDown={(e) => e.preventDefault()}
