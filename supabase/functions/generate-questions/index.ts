@@ -102,6 +102,10 @@ Formatea cada pregunta como JSON:
 
 Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
     } else if (assessmentType === 'psychometric') {
+      // Determine if test uses Likert scale (no correct answers) or has correct answers
+      const likertTests = ['mbti', 'disc', 'big_five', 'emotional_intelligence', 'rorschach', 'mmpi', 'cattell_16pf', 'hogan', 'caliper'];
+      const usesLikert = likertTests.includes(psychometricType || '');
+      
       const psychometricPrompts: Record<string, string> = {
         mbti: 'Myers-Briggs Type Indicator questions assessing personality preferences (Extraversion/Introversion, Sensing/Intuition, Thinking/Feeling, Judging/Perceiving)',
         disc: 'DISC assessment questions evaluating Dominance, Influence, Steadiness, and Conscientiousness behavioral styles',
@@ -116,12 +120,75 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
       };
 
       const psychDesc = psychometricPrompts[psychometricType || 'mbti'];
-      systemPrompt = language === 'en'
-        ? `You are an expert psychometric test designer. Generate 50 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT. ${languageInstruction}`
-        : `Eres un diseñador experto en pruebas psicométricas. Genera 50 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS. ${languageInstruction}`;
       
-      userPrompt = language === 'en'
-        ? `Create 50 CONCISE psychometric questions for ${psychometricType?.toUpperCase()} assessment.
+      if (usesLikert) {
+        systemPrompt = language === 'en'
+          ? `You are an expert psychometric test designer. Generate 50 CONCISE Likert-scale questions that can be answered in 40 seconds or less. Keep questions SHORT. ${languageInstruction}`
+          : `Eres un diseñador experto en pruebas psicométricas. Genera 50 preguntas CONCISAS con escala Likert que puedan responderse en 40 segundos o menos. Mantén las preguntas CORTAS. ${languageInstruction}`;
+        
+        userPrompt = language === 'en'
+          ? `Create 50 CONCISE psychometric questions for ${psychometricType?.toUpperCase()} assessment using a Likert scale.
+
+CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
+- Question text: Maximum 2 lines
+- Use a 5-point Likert scale
+
+Focus on: ${psychDesc}
+
+Each question must:
+- Be a BRIEF statement about personality traits, behaviors, or preferences
+- There is NO correct answer - all options are valid responses
+- Be professionally appropriate and unbiased
+
+Use this Likert scale format:
+A = "Strongly Disagree" / "Totalmente en desacuerdo"
+B = "Disagree" / "En desacuerdo"  
+C = "Neutral" / "Neutral"
+D = "Agree" / "De acuerdo"
+E = "Strongly Agree" / "Totalmente de acuerdo"
+
+Format each question as JSON:
+{
+  "question": "brief statement text",
+  "correct": "LIKERT"
+}
+
+Return ONLY a JSON array of 50 questions. ${languageInstruction}`
+          : `Crea 50 preguntas psicométricas CONCISAS para la evaluación ${psychometricType?.toUpperCase()} usando escala Likert.
+
+CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
+- Texto de pregunta: Máximo 2 líneas
+- Usa una escala Likert de 5 puntos
+
+Enfócate en: ${psychDesc}
+
+Cada pregunta debe:
+- Ser una afirmación BREVE sobre rasgos de personalidad, comportamientos o preferencias
+- NO hay respuesta correcta - todas las opciones son respuestas válidas
+- Ser profesionalmente apropiada e imparcial
+
+Usa este formato de escala Likert:
+A = "Totalmente en desacuerdo"
+B = "En desacuerdo"
+C = "Neutral"
+D = "De acuerdo"
+E = "Totalmente de acuerdo"
+
+Formatea cada pregunta como JSON:
+{
+  "question": "texto breve de la afirmación",
+  "correct": "LIKERT"
+}
+
+Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
+      } else {
+        // Wonderlic - cognitive test with correct answers
+        systemPrompt = language === 'en'
+          ? `You are an expert psychometric test designer. Generate 50 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT. ${languageInstruction}`
+          : `Eres un diseñador experto en pruebas psicométricas. Genera 50 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS. ${languageInstruction}`;
+        
+        userPrompt = language === 'en'
+          ? `Create 50 CONCISE cognitive ability questions for ${psychometricType?.toUpperCase()} assessment.
 
 CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
 - Question text: Maximum 2 lines
@@ -130,10 +197,10 @@ CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
 Focus on: ${psychDesc}
 
 Each question must:
-- Be BRIEFLY worded to assess specific psychological traits
-- Have 4 SHORT answer options with varying degrees of the measured trait
-- One answer should be most indicative of the trait being measured
-- Be professionally appropriate and unbiased
+- Be BRIEFLY worded to test cognitive ability
+- Have 4 SHORT answer options (A, B, C, D)
+- Have exactly one correct answer
+- Test problem-solving, logical reasoning, and learning aptitude
 
 Format each question as JSON:
 {
@@ -148,7 +215,7 @@ Format each question as JSON:
 }
 
 Return ONLY a JSON array of 50 questions. ${languageInstruction}`
-        : `Crea 50 preguntas psicométricas CONCISAS para la evaluación ${psychometricType?.toUpperCase()}.
+          : `Crea 50 preguntas CONCISAS de habilidad cognitiva para la evaluación ${psychometricType?.toUpperCase()}.
 
 CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
 - Texto de pregunta: Máximo 2 líneas
@@ -157,10 +224,10 @@ CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
 Enfócate en: ${psychDesc}
 
 Cada pregunta debe:
-- Estar redactada BREVEMENTE para evaluar rasgos psicológicos específicos
-- Tener 4 opciones de respuesta CORTAS con diferentes grados del rasgo medido
-- Una respuesta debe ser la más indicativa del rasgo que se está midiendo
-- Ser profesionalmente apropiada e imparcial
+- Estar redactada BREVEMENTE para evaluar habilidad cognitiva
+- Tener 4 opciones de respuesta CORTAS (A, B, C, D)
+- Tener exactamente una respuesta correcta
+- Evaluar resolución de problemas, razonamiento lógico y aptitud de aprendizaje
 
 Formatea cada pregunta como JSON:
 {
@@ -175,6 +242,7 @@ Formatea cada pregunta como JSON:
 }
 
 Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
+      }
     }
 
     // Call Lovable AI
@@ -222,16 +290,32 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
 
     // Insert questions into database
     console.log('Inserting questions into database...');
-    const questionsToInsert = questions.map((q: any, index: number) => ({
-      assessment_id: assessmentId,
-      question_number: index + 1,
-      question_text: q.question,
-      option_a: q.options.A,
-      option_b: q.options.B,
-      option_c: q.options.C,
-      option_d: q.options.D,
-      correct_answer: q.correct,
-    }));
+    const questionsToInsert = questions.map((q: any, index: number) => {
+      // For Likert scale questions
+      if (q.correct === 'LIKERT') {
+        return {
+          assessment_id: assessmentId,
+          question_number: index + 1,
+          question_text: q.question,
+          option_a: language === 'en' ? 'Strongly Disagree' : 'Totalmente en desacuerdo',
+          option_b: language === 'en' ? 'Disagree' : 'En desacuerdo',
+          option_c: language === 'en' ? 'Neutral' : 'Neutral',
+          option_d: language === 'en' ? 'Agree' : 'De acuerdo',
+          correct_answer: 'LIKERT',
+        };
+      }
+      // For questions with correct answers
+      return {
+        assessment_id: assessmentId,
+        question_number: index + 1,
+        question_text: q.question,
+        option_a: q.options.A,
+        option_b: q.options.B,
+        option_c: q.options.C,
+        option_d: q.options.D,
+        correct_answer: q.correct,
+      };
+    });
 
     const { error: insertError } = await supabaseClient
       .from('assessment_questions')
