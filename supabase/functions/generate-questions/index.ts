@@ -170,13 +170,17 @@ C = "Neutral" / "Neutral"
 D = "Agree" / "De acuerdo"
 E = "Strongly Agree" / "Totalmente de acuerdo"
 
-Format each question as JSON:
+CRITICAL - JSON FORMAT:
+You MUST return EXACTLY this JSON structure for each question:
 {
   "question": "brief statement text",
   "correct": "LIKERT"
 }
 
-Return ONLY a JSON array of 50 questions. ${languageInstruction}`
+DO NOT include an "options" field. DO NOT include separate A, B, C, D fields.
+The format is: question text + correct field set to "LIKERT" string.
+
+Return ONLY a JSON array of 50 questions with this exact structure. ${languageInstruction}`
           : `Crea 50 preguntas psicométricas CONCISAS para la evaluación ${psychometricType?.toUpperCase()} usando escala Likert.
 
 CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
@@ -197,13 +201,17 @@ C = "Neutral"
 D = "De acuerdo"
 E = "Totalmente de acuerdo"
 
-Formatea cada pregunta como JSON:
+CRÍTICO - FORMATO JSON:
+DEBES devolver EXACTAMENTE esta estructura JSON para cada pregunta:
 {
   "question": "texto breve de la afirmación",
   "correct": "LIKERT"
 }
 
-Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
+NO incluyas un campo "options". NO incluyas campos separados A, B, C, D.
+El formato es: texto de pregunta + campo correct establecido como string "LIKERT".
+
+Devuelve SOLAMENTE un array JSON de 50 preguntas con esta estructura exacta. ${languageInstruction}`;
       } else {
         // Wonderlic - cognitive test with correct answers
         systemPrompt = language === 'en'
@@ -324,6 +332,12 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
     // Insert questions into database
     console.log('Inserting questions into database...');
     const questionsToInsert = questions.map((q: any, index: number) => {
+      // Validate question structure
+      if (!q.question) {
+        console.error(`Question ${index + 1} missing question text:`, q);
+        throw new Error(`Question ${index + 1} has invalid structure`);
+      }
+
       // For Likert scale questions
       if (q.correct === 'LIKERT') {
         return {
@@ -338,7 +352,13 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
           correct_answer: 'LIKERT',
         };
       }
-      // For questions with correct answers
+      
+      // For questions with correct answers - validate options exist
+      if (!q.options || !q.options.A || !q.options.B || !q.options.C || !q.options.D) {
+        console.error(`Question ${index + 1} missing options:`, q);
+        throw new Error(`Question ${index + 1} has invalid structure - missing options`);
+      }
+
       return {
         assessment_id: assessmentId,
         question_number: index + 1,
