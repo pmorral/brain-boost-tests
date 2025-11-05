@@ -209,31 +209,37 @@ const AssessmentDetails = () => {
               {showQuestions && (
                 <CardContent>
                   <div className="space-y-4">
-                    {questions.map((question, index) => (
-                      <div key={question.id} className="border rounded-lg p-4 bg-muted/30">
-                        <p className="font-semibold mb-3">
-                          {question.question_number}. {question.question_text}
-                        </p>
-                        <div className="grid grid-cols-1 gap-2 text-sm ml-4">
-                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'A' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
-                            A) {question.option_a}
-                            {question.correct_answer === 'A' && ' ✓ Correcta'}
-                          </div>
-                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'B' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
-                            B) {question.option_b}
-                            {question.correct_answer === 'B' && ' ✓ Correcta'}
-                          </div>
-                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'C' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
-                            C) {question.option_c}
-                            {question.correct_answer === 'C' && ' ✓ Correcta'}
-                          </div>
-                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'D' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
-                            D) {question.option_d}
-                            {question.correct_answer === 'D' && ' ✓ Correcta'}
+                     {questions.map((question, index) => {
+                      const isLikert = question.correct_answer === 'LIKERT';
+                      const options = isLikert 
+                        ? { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d, E: question.option_e }
+                        : { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d };
+                        
+                      return (
+                        <div key={question.id} className="border rounded-lg p-4 bg-muted/30">
+                          <p className="font-semibold mb-3">
+                            {question.question_number}. {question.question_text}
+                          </p>
+                          {isLikert && (
+                            <p className="text-xs text-muted-foreground mb-2 italic">
+                              Escala Likert - No hay respuesta correcta
+                            </p>
+                          )}
+                          <div className="grid grid-cols-1 gap-2 text-sm ml-4">
+                            {Object.entries(options).map(([key, value]) => (
+                              <div key={key} className={`py-2 px-3 rounded ${
+                                !isLikert && question.correct_answer === key 
+                                  ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' 
+                                  : 'bg-background'
+                              }`}>
+                                {key}) {value}
+                                {!isLikert && question.correct_answer === key && ' ✓ Correcta'}
+                              </div>
+                            ))}
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </CardContent>
               )}
@@ -292,13 +298,22 @@ const AssessmentDetails = () => {
                                 <div className="flex flex-col items-center gap-1">
                                   <Award className="h-8 w-8 text-primary" />
                                   <div className="text-center">
-                                    <div className="text-2xl font-bold">
-                                      {candidate.total_score || 0}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">/ 20</div>
-                                  </div>
-                                  <div className="text-xs font-semibold text-primary">
-                                    {Math.round(((candidate.total_score || 0) / 20) * 100)}%
+                                    {candidate.total_score !== null ? (
+                                      <>
+                                        <div className="text-2xl font-bold">
+                                          {candidate.total_score || 0}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">/ 20</div>
+                                        <div className="text-xs font-semibold text-primary">
+                                          {Math.round(((candidate.total_score || 0) / 20) * 100)}%
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <div className="text-2xl font-bold">N/A</div>
+                                        <div className="text-xs text-muted-foreground">Psicométrica</div>
+                                      </>
+                                    )}
                                   </div>
                                 </div>
                               ) : (
@@ -324,17 +339,25 @@ const AssessmentDetails = () => {
                                   ) : (
                                     details.map((response: any, index: number) => {
                                       const question = response.assessment_questions;
-                                      const options = {
-                                        A: question.option_a,
-                                        B: question.option_b,
-                                        C: question.option_c,
-                                        D: question.option_d,
-                                      };
+                                      const isLikert = question.correct_answer === 'LIKERT';
+                                      const options = isLikert 
+                                        ? { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d, E: question.option_e }
+                                        : { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d };
                                       
                                       return (
-                                        <div key={response.id} className={`border rounded-lg p-4 ${response.is_correct ? 'bg-green-50 dark:bg-green-950/20 border-green-300' : 'bg-red-50 dark:bg-red-950/20 border-red-300'}`}>
+                                        <div key={response.id} className={`border rounded-lg p-4 ${
+                                          isLikert 
+                                            ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-300' 
+                                            : response.is_correct 
+                                            ? 'bg-green-50 dark:bg-green-950/20 border-green-300' 
+                                            : 'bg-red-50 dark:bg-red-950/20 border-red-300'
+                                        }`}>
                                           <div className="flex items-start gap-2 mb-2">
-                                            {response.is_correct ? (
+                                            {isLikert ? (
+                                              <div className="h-5 w-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold mt-0.5 flex-shrink-0">
+                                                L
+                                              </div>
+                                            ) : response.is_correct ? (
                                               <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
                                             ) : (
                                               <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
@@ -343,20 +366,29 @@ const AssessmentDetails = () => {
                                               <p className="font-semibold text-sm mb-2">
                                                 Pregunta {question.question_number}: {question.question_text}
                                               </p>
+                                              {isLikert && (
+                                                <p className="text-xs text-muted-foreground mb-2 italic">
+                                                  Escala Likert - Sin respuesta correcta
+                                                </p>
+                                              )}
                                               <div className="grid grid-cols-1 gap-1 text-sm">
                                                 {Object.entries(options).map(([key, value]) => (
                                                   <div key={key} className={`py-1 px-2 rounded ${
-                                                    key === response.selected_answer && key === question.correct_answer
-                                                      ? 'bg-green-200 dark:bg-green-900 font-semibold'
-                                                      : key === response.selected_answer
-                                                      ? 'bg-red-200 dark:bg-red-900 font-semibold'
-                                                      : key === question.correct_answer
-                                                      ? 'bg-green-100 dark:bg-green-950 font-medium'
-                                                      : ''
+                                                    isLikert 
+                                                      ? key === response.selected_answer
+                                                        ? 'bg-blue-200 dark:bg-blue-900 font-semibold'
+                                                        : ''
+                                                      : key === response.selected_answer && key === question.correct_answer
+                                                        ? 'bg-green-200 dark:bg-green-900 font-semibold'
+                                                        : key === response.selected_answer
+                                                        ? 'bg-red-200 dark:bg-red-900 font-semibold'
+                                                        : key === question.correct_answer
+                                                        ? 'bg-green-100 dark:bg-green-950 font-medium'
+                                                        : ''
                                                   }`}>
                                                     {key}) {value}
-                                                    {key === response.selected_answer && ' ← Respuesta del candidato'}
-                                                    {key === question.correct_answer && key !== response.selected_answer && ' ← Respuesta correcta'}
+                                                    {key === response.selected_answer && (isLikert ? ' ← Respuesta seleccionada' : ' ← Respuesta del candidato')}
+                                                    {!isLikert && key === question.correct_answer && key !== response.selected_answer && ' ← Respuesta correcta'}
                                                   </div>
                                                 ))}
                                               </div>

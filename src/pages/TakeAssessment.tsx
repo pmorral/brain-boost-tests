@@ -191,13 +191,14 @@ const TakeAssessment = () => {
 
   const handleAnswer = async (answer: string) => {
     const question = questions[currentQuestion];
-    const isCorrect = answer === question.correct_answer;
+    const isLikert = question.correct_answer === 'LIKERT';
+    const isCorrect = isLikert ? null : answer === question.correct_answer;
     
     await supabase.from("candidate_responses").insert([{
       candidate_id: candidateId,
       question_id: question.id,
       selected_answer: answer || "A",
-      is_correct: isCorrect,
+      is_correct: isCorrect !== null ? isCorrect : false,
       time_taken_seconds: 40 - timeLeft,
     }] as any);
 
@@ -209,7 +210,12 @@ const TakeAssessment = () => {
       setCurrentQuestion(currentQuestion + 1);
       setTimeLeft(40);
     } else {
-      await supabase.from("candidates").update({ completed_at: new Date().toISOString(), total_score: newScore }).eq("id", candidateId);
+      // For Likert assessments, don't save a score
+      const finalScore = isLikert ? null : newScore;
+      await supabase.from("candidates").update({ 
+        completed_at: new Date().toISOString(), 
+        total_score: finalScore 
+      }).eq("id", candidateId);
       setStep("complete");
     }
   };
@@ -317,11 +323,18 @@ const TakeAssessment = () => {
           <CardContent className="space-y-6">
             <CardTitle className="text-lg">{questions[currentQuestion]?.question_text}</CardTitle>
             <div className="space-y-3">
-              {["A", "B", "C", "D"].map((option) => (
-                <Button key={option} variant="outline" className="w-full justify-start text-left h-auto py-4" onClick={() => handleAnswer(option)}>
-                  <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
-                </Button>
-              ))}
+              {questions[currentQuestion]?.correct_answer === 'LIKERT' 
+                ? ["A", "B", "C", "D", "E"].map((option) => (
+                    <Button key={option} variant="outline" className="w-full justify-start text-left h-auto py-4" onClick={() => handleAnswer(option)}>
+                      <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
+                    </Button>
+                  ))
+                : ["A", "B", "C", "D"].map((option) => (
+                    <Button key={option} variant="outline" className="w-full justify-start text-left h-auto py-4" onClick={() => handleAnswer(option)}>
+                      <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
+                    </Button>
+                  ))
+              }
             </div>
           </CardContent>
         </Card>
@@ -332,7 +345,15 @@ const TakeAssessment = () => {
           <CardContent className="pt-8 space-y-6">
             <CheckCircle2 className="h-16 w-16 text-secondary mx-auto" />
             <div><h2 className="text-3xl font-bold">¡Evaluación Completada!</h2><p className="text-muted-foreground mt-2">Gracias por completar la evaluación</p></div>
-            <div className="bg-primary/10 rounded-lg p-6"><div className="text-5xl font-bold text-primary">{score}/20</div><div className="text-sm text-muted-foreground mt-2">Respuestas correctas</div><div className="text-2xl font-semibold text-primary mt-2">{Math.round((score / 20) * 100)}%</div></div>
+            {questions[0]?.correct_answer === 'LIKERT' ? (
+              <div className="bg-primary/10 rounded-lg p-6">
+                <div className="text-4xl font-bold text-primary">N/A</div>
+                <div className="text-sm text-muted-foreground mt-2">Evaluación psicométrica</div>
+                <p className="text-sm mt-4">Esta evaluación no tiene puntuación. El reclutador analizará tus respuestas para entender tu perfil.</p>
+              </div>
+            ) : (
+              <div className="bg-primary/10 rounded-lg p-6"><div className="text-5xl font-bold text-primary">{score}/20</div><div className="text-sm text-muted-foreground mt-2">Respuestas correctas</div><div className="text-2xl font-semibold text-primary mt-2">{Math.round((score / 20) * 100)}%</div></div>
+            )}
             <p className="text-sm text-muted-foreground">Los resultados han sido enviados al reclutador.</p>
           </CardContent>
         </Card>

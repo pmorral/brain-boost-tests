@@ -24,6 +24,7 @@ export type Database = {
           option_b: string
           option_c: string
           option_d: string
+          option_e: string | null
           question_number: number
           question_text: string
         }
@@ -36,6 +37,7 @@ export type Database = {
           option_b: string
           option_c: string
           option_d: string
+          option_e?: string | null
           question_number: number
           question_text: string
         }
@@ -48,6 +50,7 @@ export type Database = {
           option_b?: string
           option_c?: string
           option_d?: string
+          option_e?: string | null
           question_number?: number
           question_text?: string
         }
