@@ -149,9 +149,20 @@ const TakeAssessment = () => {
       return;
     }
 
+    // Randomly select 20 questions from all 50
+    const shuffled = [...questions].sort(() => Math.random() - 0.5);
+    const selectedQuestions = shuffled.slice(0, 20);
+    const questionIds = selectedQuestions.map(q => q.id);
+
     const { data, error } = await supabase
       .from("candidates")
-      .insert([{ assessment_id: assessment.id, full_name: fullName, email, started_at: new Date().toISOString() }] as any)
+      .insert([{ 
+        assessment_id: assessment.id, 
+        full_name: fullName, 
+        email, 
+        started_at: new Date().toISOString(),
+        assigned_question_ids: questionIds
+      }] as any)
       .select()
       .single();
 
@@ -159,6 +170,7 @@ const TakeAssessment = () => {
       toast({ title: "Error", description: "No se pudo iniciar la evaluación", variant: "destructive" });
     } else {
       setCandidateId(data.id);
+      setQuestions(selectedQuestions); // Use only the 20 selected questions
       setStep("test");
     }
   };
@@ -228,7 +240,7 @@ const TakeAssessment = () => {
 
             <div className="bg-muted p-4 rounded space-y-1 text-sm">
               <p className="font-semibold mb-2">Detalles de la Evaluación:</p>
-              <p>• 20 preguntas</p>
+              <p>• 20 preguntas (seleccionadas aleatoriamente)</p>
               <p>• 40 segundos por pregunta</p>
               <p>• No podrás volver atrás</p>
             </div>

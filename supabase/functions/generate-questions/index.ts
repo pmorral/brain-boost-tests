@@ -35,11 +35,11 @@ serve(async (req) => {
 
     if (assessmentType === 'skills') {
       systemPrompt = language === 'en'
-        ? `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 20 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT and DIRECT. ${languageInstruction}`
-        : `Eres un experto creador de evaluaciones especializado en habilidades técnicas y blandas. Genera 20 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS y DIRECTAS. ${languageInstruction}`;
+        ? `You are an expert assessment creator specializing in both technical and soft skills evaluation. Generate 50 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT and DIRECT. ${languageInstruction}`
+        : `Eres un experto creador de evaluaciones especializado en habilidades técnicas y blandas. Genera 50 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS y DIRECTAS. ${languageInstruction}`;
       
       userPrompt = language === 'en'
-        ? `Create 20 CONCISE assessment questions based on: ${topic}
+        ? `Create 50 CONCISE assessment questions based on: ${topic}
 
 CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
 - Question text: Maximum 2 lines
@@ -69,8 +69,8 @@ Format each question as JSON:
   "correct": "A/B/C/D"
 }
 
-Return ONLY a JSON array of 20 questions. ${languageInstruction}`
-        : `Crea 20 preguntas CONCISAS de evaluación basadas en: ${topic}
+Return ONLY a JSON array of 50 questions. ${languageInstruction}`
+        : `Crea 50 preguntas CONCISAS de evaluación basadas en: ${topic}
 
 CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
 - Texto de pregunta: Máximo 2 líneas
@@ -100,7 +100,7 @@ Formatea cada pregunta como JSON:
   "correct": "A/B/C/D"
 }
 
-Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
+Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
     } else if (assessmentType === 'psychometric') {
       const psychometricPrompts: Record<string, string> = {
         mbti: 'Myers-Briggs Type Indicator questions assessing personality preferences (Extraversion/Introversion, Sensing/Intuition, Thinking/Feeling, Judging/Perceiving)',
@@ -117,11 +117,11 @@ Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
 
       const psychDesc = psychometricPrompts[psychometricType || 'mbti'];
       systemPrompt = language === 'en'
-        ? `You are an expert psychometric test designer. Generate 20 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT. ${languageInstruction}`
-        : `Eres un diseñador experto en pruebas psicométricas. Genera 20 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS. ${languageInstruction}`;
+        ? `You are an expert psychometric test designer. Generate 50 CONCISE multiple-choice questions that can be answered in 40 seconds or less. Keep questions and answers SHORT. ${languageInstruction}`
+        : `Eres un diseñador experto en pruebas psicométricas. Genera 50 preguntas CONCISAS de opción múltiple que puedan responderse en 40 segundos o menos. Mantén las preguntas y respuestas CORTAS. ${languageInstruction}`;
       
       userPrompt = language === 'en'
-        ? `Create 20 CONCISE psychometric questions for ${psychometricType?.toUpperCase()} assessment.
+        ? `Create 50 CONCISE psychometric questions for ${psychometricType?.toUpperCase()} assessment.
 
 CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
 - Question text: Maximum 2 lines
@@ -147,8 +147,8 @@ Format each question as JSON:
   "correct": "A/B/C/D"
 }
 
-Return ONLY a JSON array of 20 questions. ${languageInstruction}`
-        : `Crea 20 preguntas psicométricas CONCISAS para la evaluación ${psychometricType?.toUpperCase()}.
+Return ONLY a JSON array of 50 questions. ${languageInstruction}`
+        : `Crea 50 preguntas psicométricas CONCISAS para la evaluación ${psychometricType?.toUpperCase()}.
 
 CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
 - Texto de pregunta: Máximo 2 líneas
@@ -174,7 +174,7 @@ Formatea cada pregunta como JSON:
   "correct": "A/B/C/D"
 }
 
-Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
+Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
     }
 
     // Call Lovable AI
@@ -216,8 +216,8 @@ Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
       throw new Error('Failed to parse AI-generated questions');
     }
 
-    if (!Array.isArray(questions) || questions.length !== 20) {
-      throw new Error('AI did not return exactly 20 questions');
+    if (!Array.isArray(questions) || questions.length !== 50) {
+      throw new Error('AI did not return exactly 50 questions');
     }
 
     // Insert questions into database
@@ -245,7 +245,7 @@ Devuelve SOLAMENTE un array JSON de 20 preguntas. ${languageInstruction}`;
     console.log('Questions generated successfully');
 
     return new Response(
-      JSON.stringify({ success: true, questionsCount: 20 }),
+      JSON.stringify({ success: true, questionsCount: 50 }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

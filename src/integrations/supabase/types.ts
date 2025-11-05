@@ -157,6 +157,7 @@ export type Database = {
       candidates: {
         Row: {
           assessment_id: string
+          assigned_question_ids: string[] | null
           completed_at: string | null
           created_at: string
           email: string
@@ -167,6 +168,7 @@ export type Database = {
         }
         Insert: {
           assessment_id: string
+          assigned_question_ids?: string[] | null
           completed_at?: string | null
           created_at?: string
           email: string
@@ -177,6 +179,7 @@ export type Database = {
         }
         Update: {
           assessment_id?: string
+          assigned_question_ids?: string[] | null
           completed_at?: string | null
           created_at?: string
           email?: string

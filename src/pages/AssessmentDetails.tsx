@@ -203,7 +203,7 @@ const AssessmentDetails = () => {
                   </Button>
                 </CardTitle>
                 <CardDescription>
-                  {questions.length} preguntas generadas para esta evaluación
+                  {questions.length} preguntas generadas (cada candidato verá 20 aleatorias)
                 </CardDescription>
               </CardHeader>
               {showQuestions && (

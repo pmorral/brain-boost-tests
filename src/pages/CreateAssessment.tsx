@@ -120,7 +120,7 @@ const CreateAssessment = () => {
 
       toast({
         title: "¡Evaluación creada!",
-        description: "Las 20 preguntas han sido generadas con IA.",
+        description: "Las 50 preguntas han sido generadas con IA.",
       });
 
       navigate(`/assessment/${assessment.id}`);
@@ -163,7 +163,7 @@ const CreateAssessment = () => {
               <CardTitle className="text-2xl">Crear Nueva Evaluación</CardTitle>
             </div>
             <CardDescription>
-              La IA generará 20 preguntas personalizadas basadas en tus especificaciones
+              La IA generará 50 preguntas personalizadas. Cada candidato verá 20 aleatorias.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -265,9 +265,10 @@ const CreateAssessment = () => {
                     Detalles de la Evaluación
                   </h3>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• 20 preguntas generadas por IA</li>
+                    <li>• 50 preguntas generadas por IA</li>
+                    <li>• Cada candidato verá 20 preguntas aleatorias</li>
                     <li>• 4 opciones de respuesta por pregunta</li>
-                    <li>• 50 segundos por pregunta</li>
+                    <li>• 40 segundos por pregunta</li>
                     <li>• Link único para compartir con candidatos</li>
                   </ul>
                 </div>
