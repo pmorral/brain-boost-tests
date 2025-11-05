@@ -166,6 +166,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          psychometric_analysis: string | null
           started_at: string | null
           total_score: number | null
         }
@@ -177,6 +178,7 @@ export type Database = {
           email: string
           full_name: string
           id?: string
+          psychometric_analysis?: string | null
           started_at?: string | null
           total_score?: number | null
         }
@@ -188,6 +190,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          psychometric_analysis?: string | null
           started_at?: string | null
           total_score?: number | null
         }

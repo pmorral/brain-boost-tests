@@ -216,6 +216,18 @@ const TakeAssessment = () => {
         completed_at: new Date().toISOString(), 
         total_score: finalScore 
       }).eq("id", candidateId);
+      
+      // If it's a Likert assessment, trigger AI analysis
+      if (isLikert) {
+        try {
+          await supabase.functions.invoke('analyze-psychometric', {
+            body: { candidateId }
+          });
+        } catch (error) {
+          console.error('Error triggering psychometric analysis:', error);
+        }
+      }
+      
       setStep("complete");
     }
   };

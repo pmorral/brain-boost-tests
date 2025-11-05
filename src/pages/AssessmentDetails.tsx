@@ -337,7 +337,19 @@ const AssessmentDetails = () => {
                                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
                                     </div>
                                   ) : (
-                                    details.map((response: any, index: number) => {
+                                    <>
+                                      {candidate.psychometric_analysis && candidate.total_score === null && (
+                                        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-300 rounded-lg p-4 mb-4">
+                                          <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2 flex items-center gap-2">
+                                            <Award className="h-5 w-5" />
+                                            Análisis Psicométrico por IA
+                                          </h4>
+                                          <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
+                                            {candidate.psychometric_analysis}
+                                          </p>
+                                        </div>
+                                      )}
+                                      {details.map((response: any, index: number) => {
                                       const question = response.assessment_questions;
                                       const isLikert = question.correct_answer === 'LIKERT';
                                       const options = isLikert 
@@ -399,7 +411,8 @@ const AssessmentDetails = () => {
                                           </div>
                                         </div>
                                       );
-                                    })
+                                    })}
+                                  </>
                                   )}
                                 </CollapsibleContent>
                               </Collapsible>
