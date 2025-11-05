@@ -345,6 +345,57 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
       throw new Error('AI did not return exactly 50 questions');
     }
 
+    // Validate and redistribute correct answers if needed (for non-Likert questions)
+    const hasCorrectAnswers = questions.some(q => q.correct && q.correct !== 'LIKERT');
+    if (hasCorrectAnswers) {
+      // Count distribution of correct answers
+      const distribution = { A: 0, B: 0, C: 0, D: 0 };
+      questions.forEach(q => {
+        if (q.correct && q.correct !== 'LIKERT') {
+          distribution[q.correct as keyof typeof distribution] = (distribution[q.correct as keyof typeof distribution] || 0) + 1;
+        }
+      });
+      
+      console.log('Original correct answer distribution:', distribution);
+      
+      // If distribution is heavily skewed, redistribute answers
+      const maxCount = Math.max(...Object.values(distribution));
+      const minCount = Math.min(...Object.values(distribution));
+      
+      if (maxCount - minCount > 5) {
+        console.log('Redistributing answers for better balance...');
+        
+        // Shuffle correct answers to ensure even distribution
+        const answers = ['A', 'B', 'C', 'D'];
+        let answerIndex = 0;
+        
+        questions.forEach((q, idx) => {
+          if (q.correct && q.correct !== 'LIKERT') {
+            const newCorrect = answers[answerIndex % 4];
+            
+            // If changing the correct answer, swap the options
+            if (newCorrect !== q.correct && q.options) {
+              const temp = q.options[newCorrect];
+              q.options[newCorrect] = q.options[q.correct];
+              q.options[q.correct] = temp;
+              q.correct = newCorrect;
+            }
+            
+            answerIndex++;
+          }
+        });
+        
+        // Log new distribution
+        const newDistribution = { A: 0, B: 0, C: 0, D: 0 };
+        questions.forEach(q => {
+          if (q.correct && q.correct !== 'LIKERT') {
+            newDistribution[q.correct as keyof typeof newDistribution]++;
+          }
+        });
+        console.log('New correct answer distribution:', newDistribution);
+      }
+    }
+
     // Insert questions into database
     console.log('Inserting questions into database...');
     const questionsToInsert = questions.map((q: any, index: number) => {
