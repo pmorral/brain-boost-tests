@@ -309,10 +309,21 @@ const TakeAssessment = () => {
                 <li>Completa la evaluación desde allí</li>
               </ol>
             </div>
-            <div className="bg-muted p-3 rounded-lg">
-              <p className="text-xs text-muted-foreground break-all">
+            <div className="bg-muted p-3 rounded-lg relative">
+              <p className="text-xs text-muted-foreground break-all pr-16">
                 {window.location.href}
               </p>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute right-2 top-2"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({ title: "¡Copiado!", description: "El link ha sido copiado al portapapeles" });
+                }}
+              >
+                Copiar
+              </Button>
             </div>
             <p className="text-xs text-muted-foreground">
               Esta medida ayuda a prevenir fraudes y garantiza la integridad de la evaluación.
