@@ -230,12 +230,16 @@ const TakeAssessment = () => {
       // Show complete screen immediately
       setStep("complete");
       
-      // Save data in background (no await)
+      // Save data in background with error handling
       const finalScore = isLikert ? null : newScore;
       supabase.from("candidates").update({ 
         completed_at: new Date().toISOString(), 
         total_score: finalScore 
-      }).eq("id", candidateId);
+      }).eq("id", candidateId).then(({ error }) => {
+        if (error) {
+          console.error('Error updating candidate completion:', error);
+        }
+      });
       
       // If it's a Likert assessment, trigger AI analysis in background
       if (isLikert) {
