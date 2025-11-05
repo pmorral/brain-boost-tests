@@ -165,7 +165,7 @@ const AssessmentDetails = () => {
   const getShareLink = () => {
     // Clean origin by removing any query parameters and ensuring proper domain
     const cleanOrigin = window.location.origin;
-    return `${cleanOrigin}/take/${assessment.share_link}`;
+    return `${cleanOrigin}/take-assessment/${assessment.share_link}`;
   };
 
   const copyShareLink = () => {
