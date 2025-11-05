@@ -5,8 +5,9 @@ import { AuthForm } from "@/components/AuthForm";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [searchParams] = useSearchParams();
+  const defaultMode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin';
+  const [mode, setMode] = useState<"signin" | "signup">(defaultMode);
   const navigate = useNavigate();
   const { toast } = useToast();
 

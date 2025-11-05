@@ -150,10 +150,10 @@ const CreateAssessment = () => {
       } else {
         toast({
           title: "¡Evaluación creada!",
-          description: "Para ver los resultados, inicia sesión con el email proporcionado.",
+          description: "Crea tu cuenta para ver los resultados.",
         });
         setTimeout(() => {
-          navigate(`/auth?email=${encodeURIComponent(creatorEmail)}`);
+          navigate(`/auth?mode=signup&email=${encodeURIComponent(creatorEmail)}`);
         }, 3000);
       }
     } catch (error: any) {
