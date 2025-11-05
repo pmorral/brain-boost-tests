@@ -383,38 +383,32 @@ const TakeAssessment = () => {
             <div className="space-y-3">
               {questions[currentQuestion]?.correct_answer === 'LIKERT' 
                 ? ["A", "B", "C", "D", "E"].map((option) => (
-                    <Button 
-                      key={`${currentQuestion}-${option}`}
-                      variant="outline"
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:!bg-transparent hover:!text-foreground hover:border-foreground/30 focus:!bg-transparent focus:border-input focus-visible:ring-0 active:!bg-transparent" 
-                      onClick={(e) => {
-                        e.currentTarget.blur();
-                        handleAnswer(option);
-                      }}
-                      type="button"
+                    <div
+                      key={`q${currentQuestion}-${option}`}
+                      className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background"
+                      onClick={() => handleAnswer(option)}
+                      role="button"
+                      tabIndex={0}
                     >
-                      <div className="flex items-start gap-3 w-full pointer-events-none">
+                      <div className="flex items-start gap-3 w-full">
                         <span className="font-bold flex-shrink-0">{option}.</span>
                         <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
                       </div>
-                    </Button>
+                    </div>
                   ))
                 : ["A", "B", "C", "D"].map((option) => (
-                    <Button 
-                      key={`${currentQuestion}-${option}`}
-                      variant="outline"
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:!bg-transparent hover:!text-foreground hover:border-foreground/30 focus:!bg-transparent focus:border-input focus-visible:ring-0 active:!bg-transparent" 
-                      onClick={(e) => {
-                        e.currentTarget.blur();
-                        handleAnswer(option);
-                      }}
-                      type="button"
+                    <div
+                      key={`q${currentQuestion}-${option}`}
+                      className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background"
+                      onClick={() => handleAnswer(option)}
+                      role="button"
+                      tabIndex={0}
                     >
-                      <div className="flex items-start gap-3 w-full pointer-events-none">
+                      <div className="flex items-start gap-3 w-full">
                         <span className="font-bold flex-shrink-0">{option}.</span>
                         <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
                       </div>
-                    </Button>
+                    </div>
                   ))
               }
             </div>
