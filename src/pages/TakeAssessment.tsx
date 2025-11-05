@@ -24,6 +24,7 @@ const TakeAssessment = () => {
   const [responses, setResponses] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<string>("");
 
   useEffect(() => {
     // Detect if device is mobile
@@ -100,6 +101,11 @@ const TakeAssessment = () => {
       handleAnswer("");
     }
   }, [step, timeLeft]);
+
+  // Reset selected answer when question changes
+  useEffect(() => {
+    setSelectedAnswer("");
+  }, [currentQuestion]);
 
   useEffect(() => {
     if (step !== "test") return;
@@ -196,6 +202,11 @@ const TakeAssessment = () => {
   };
 
   const handleAnswer = async (answer: string) => {
+    setSelectedAnswer(answer);
+    
+    // Small visual delay so user sees their selection
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
     const question = questions[currentQuestion];
     const isLikert = question.correct_answer === 'LIKERT';
     const isCorrect = isLikert ? null : answer === question.correct_answer;
@@ -340,12 +351,22 @@ const TakeAssessment = () => {
             <div className="space-y-3">
               {questions[currentQuestion]?.correct_answer === 'LIKERT' 
                 ? ["A", "B", "C", "D", "E"].map((option) => (
-                    <Button key={option} variant="outline" className="w-full justify-start text-left h-auto py-4" onClick={() => handleAnswer(option)}>
+                    <Button 
+                      key={option} 
+                      variant={selectedAnswer === option ? "default" : "outline"} 
+                      className="w-full justify-start text-left h-auto py-4" 
+                      onClick={() => handleAnswer(option)}
+                    >
                       <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
                     </Button>
                   ))
                 : ["A", "B", "C", "D"].map((option) => (
-                    <Button key={option} variant="outline" className="w-full justify-start text-left h-auto py-4" onClick={() => handleAnswer(option)}>
+                    <Button 
+                      key={option} 
+                      variant={selectedAnswer === option ? "default" : "outline"} 
+                      className="w-full justify-start text-left h-auto py-4" 
+                      onClick={() => handleAnswer(option)}
+                    >
                       <span className="font-bold mr-3">{option}.</span> {questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}
                     </Button>
                   ))
