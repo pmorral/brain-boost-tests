@@ -57,8 +57,14 @@ const AssessmentDetails = () => {
     }
   };
 
+  const getShareLink = () => {
+    // Clean origin by removing any query parameters and ensuring proper domain
+    const cleanOrigin = window.location.origin;
+    return `${cleanOrigin}/take/${assessment.share_link}`;
+  };
+
   const copyShareLink = () => {
-    const link = `${window.location.origin}/take/${assessment.share_link}`;
+    const link = getShareLink();
     navigator.clipboard.writeText(link);
     toast({
       title: "¡Link copiado!",
@@ -67,7 +73,7 @@ const AssessmentDetails = () => {
   };
 
   const openShareLink = () => {
-    const link = `${window.location.origin}/take/${assessment.share_link}`;
+    const link = getShareLink();
     window.open(link, "_blank");
   };
 
@@ -205,7 +211,7 @@ const AssessmentDetails = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-muted rounded-lg p-4 break-all text-sm">
-                  {window.location.origin}/take/{assessment.share_link}
+                  {getShareLink()}
                 </div>
                 <div className="space-y-2">
                   <Button onClick={copyShareLink} className="w-full">
