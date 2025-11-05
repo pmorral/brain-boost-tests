@@ -66,10 +66,14 @@ Each question must have:
 - Exactly one correct answer
 - Progressive difficulty throughout the assessment
 
-CRITICAL - CORRECT ANSWER DISTRIBUTION:
-- Distribute correct answers EVENLY across all options (approximately 12-13 questions for each letter)
-- DO NOT favor A or B - use C and D equally as correct answers
-- Example distribution: ~12 questions with A correct, ~13 with B, ~12 with C, ~13 with D
+CRITICAL - CORRECT ANSWER DISTRIBUTION (MANDATORY):
+You MUST ensure the correct answers are distributed as follows:
+- Approximately 12-13 questions with "A" as correct answer
+- Approximately 12-13 questions with "B" as correct answer  
+- Approximately 12-13 questions with "C" as correct answer
+- Approximately 12-13 questions with "D" as correct answer
+This is NOT optional - you MUST randomize and vary which option is correct.
+DO NOT make most answers "B" or favor any single letter.
 
 Format each question as JSON:
 {
@@ -106,10 +110,14 @@ Cada pregunta debe tener:
 - Exactamente una respuesta correcta
 - Dificultad progresiva a lo largo de la evaluación
 
-CRÍTICO - DISTRIBUCIÓN DE RESPUESTAS CORRECTAS:
-- Distribuye las respuestas correctas UNIFORMEMENTE entre todas las opciones (aproximadamente 12-13 preguntas para cada letra)
-- NO favorezcas A o B - usa C y D igualmente como respuestas correctas
-- Ejemplo de distribución: ~12 preguntas con A correcta, ~13 con B, ~12 con C, ~13 con D
+CRÍTICO - DISTRIBUCIÓN DE RESPUESTAS CORRECTAS (OBLIGATORIO):
+DEBES asegurar que las respuestas correctas se distribuyan de la siguiente manera:
+- Aproximadamente 12-13 preguntas con "A" como respuesta correcta
+- Aproximadamente 12-13 preguntas con "B" como respuesta correcta
+- Aproximadamente 12-13 preguntas con "C" como respuesta correcta  
+- Aproximadamente 12-13 preguntas con "D" como respuesta correcta
+Esto NO es opcional - DEBES aleatorizar y variar qué opción es la correcta.
+NO hagas que la mayoría de respuestas sean "B" ni favorezcas ninguna letra en particular.
 
 Formatea cada pregunta como JSON:
 {
@@ -233,10 +241,14 @@ Each question must:
 - Have exactly one correct answer
 - Test problem-solving, logical reasoning, and learning aptitude
 
-CRITICAL - CORRECT ANSWER DISTRIBUTION:
-- Distribute correct answers EVENLY across all options (approximately 12-13 questions for each letter)
-- DO NOT favor A or B - use C and D equally as correct answers
-- Example distribution: ~12 questions with A correct, ~13 with B, ~12 with C, ~13 with D
+CRITICAL - CORRECT ANSWER DISTRIBUTION (MANDATORY):
+You MUST ensure the correct answers are distributed as follows:
+- Approximately 12-13 questions with "A" as correct answer
+- Approximately 12-13 questions with "B" as correct answer  
+- Approximately 12-13 questions with "C" as correct answer
+- Approximately 12-13 questions with "D" as correct answer
+This is NOT optional - you MUST randomize and vary which option is correct.
+DO NOT make most answers "B" or favor any single letter.
 
 Format each question as JSON:
 {
@@ -265,10 +277,14 @@ Cada pregunta debe:
 - Tener exactamente una respuesta correcta
 - Evaluar resolución de problemas, razonamiento lógico y aptitud de aprendizaje
 
-CRÍTICO - DISTRIBUCIÓN DE RESPUESTAS CORRECTAS:
-- Distribuye las respuestas correctas UNIFORMEMENTE entre todas las opciones (aproximadamente 12-13 preguntas para cada letra)
-- NO favorezcas A o B - usa C y D igualmente como respuestas correctas
-- Ejemplo de distribución: ~12 preguntas con A correcta, ~13 con B, ~12 con C, ~13 con D
+CRÍTICO - DISTRIBUCIÓN DE RESPUESTAS CORRECTAS (OBLIGATORIO):
+DEBES asegurar que las respuestas correctas se distribuyan de la siguiente manera:
+- Aproximadamente 12-13 preguntas con "A" como respuesta correcta
+- Aproximadamente 12-13 preguntas con "B" como respuesta correcta
+- Aproximadamente 12-13 preguntas con "C" como respuesta correcta  
+- Aproximadamente 12-13 preguntas con "D" como respuesta correcta
+Esto NO es opcional - DEBES aleatorizar y variar qué opción es la correcta.
+NO hagas que la mayoría de respuestas sean "B" ni favorezcas ninguna letra en particular.
 
 Formatea cada pregunta como JSON:
 {
