@@ -8,8 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, Copy, Check } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const PSYCHOMETRIC_TESTS = [
   { value: "mbti", label: "MBTI - Myers-Briggs Type Indicator" },
@@ -34,6 +35,9 @@ const CreateAssessment = () => {
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState<"es" | "en">("es");
   const [creatorEmail, setCreatorEmail] = useState("");
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLink, setShareLink] = useState("");
+  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -44,6 +48,16 @@ const CreateAssessment = () => {
     };
     checkAuth();
   }, []);
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleGoToSignup = () => {
+    navigate(`/auth?mode=signup&email=${encodeURIComponent(creatorEmail)}`);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,13 +162,13 @@ const CreateAssessment = () => {
           navigate(`/assessment/${assessment.id}`);
         }, 2000);
       } else {
+        const link = `${window.location.origin}/take-assessment/${assessment.share_link}`;
+        setShareLink(link);
+        setShowShareDialog(true);
         toast({
           title: "¡Evaluación creada!",
-          description: "Crea tu cuenta para ver los resultados.",
+          description: "Comparte el link con tus candidatos.",
         });
-        setTimeout(() => {
-          navigate(`/auth?mode=signup&email=${encodeURIComponent(creatorEmail)}`);
-        }, 3000);
       }
     } catch (error: any) {
       console.error("Error:", error);
@@ -349,6 +363,45 @@ const CreateAssessment = () => {
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              ¡Evaluación Lista!
+            </DialogTitle>
+            <DialogDescription>
+              Tu evaluación ha sido creada exitosamente. Comparte este link con tus candidatos:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <div className="grid flex-1 gap-2">
+              <Input
+                readOnly
+                value={shareLink}
+                className="font-mono text-sm"
+              />
+            </div>
+            <Button type="button" size="icon" onClick={handleCopyLink}>
+              {copied ? (
+                <Check className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          <DialogFooter className="flex-col sm:flex-col gap-2">
+            <Button onClick={handleGoToSignup} className="w-full">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Crear Cuenta para Ver Resultados
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/")} className="w-full">
+              Volver al Inicio
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
