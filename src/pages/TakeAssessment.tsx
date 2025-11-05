@@ -29,8 +29,14 @@ const TakeAssessment = () => {
 
   // Reset selected answer when question changes
   useEffect(() => {
+    console.log('Question changed to:', currentQuestion, '- Resetting selectedAnswer');
     setSelectedAnswer("");
   }, [currentQuestion]);
+
+  // Log selectedAnswer changes
+  useEffect(() => {
+    console.log('selectedAnswer changed to:', selectedAnswer);
+  }, [selectedAnswer]);
 
   useEffect(() => {
     // Detect if device is mobile
@@ -388,8 +394,10 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant={selectedAnswer === option ? "default" : "outline"} 
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal focus:ring-0 focus-visible:ring-2" 
                       onClick={() => handleAnswer(option)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      tabIndex={-1}
                     >
                       <div className="flex items-start gap-3 w-full">
                         <span className="font-bold flex-shrink-0">{option}.</span>
@@ -401,8 +409,10 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant={selectedAnswer === option ? "default" : "outline"} 
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal focus:ring-0 focus-visible:ring-2" 
                       onClick={() => handleAnswer(option)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      tabIndex={-1}
                     >
                       <div className="flex items-start gap-3 w-full">
                         <span className="font-bold flex-shrink-0">{option}.</span>
