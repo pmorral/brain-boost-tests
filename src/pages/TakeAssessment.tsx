@@ -384,10 +384,13 @@ const TakeAssessment = () => {
               {questions[currentQuestion]?.correct_answer === 'LIKERT' 
                 ? ["A", "B", "C", "D", "E"].map((option) => (
                     <Button 
-                      key={option} 
+                      key={`${currentQuestion}-${option}`}
                       variant="outline"
                       className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:!bg-transparent hover:!text-foreground hover:border-foreground/30 focus:!bg-transparent focus:border-input focus-visible:ring-0 active:!bg-transparent" 
-                      onClick={() => handleAnswer(option)}
+                      onClick={(e) => {
+                        e.currentTarget.blur();
+                        handleAnswer(option);
+                      }}
                       type="button"
                     >
                       <div className="flex items-start gap-3 w-full pointer-events-none">
@@ -398,10 +401,13 @@ const TakeAssessment = () => {
                   ))
                 : ["A", "B", "C", "D"].map((option) => (
                     <Button 
-                      key={option} 
+                      key={`${currentQuestion}-${option}`}
                       variant="outline"
                       className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:!bg-transparent hover:!text-foreground hover:border-foreground/30 focus:!bg-transparent focus:border-input focus-visible:ring-0 active:!bg-transparent" 
-                      onClick={() => handleAnswer(option)}
+                      onClick={(e) => {
+                        e.currentTarget.blur();
+                        handleAnswer(option);
+                      }}
                       type="button"
                     >
                       <div className="flex items-start gap-3 w-full pointer-events-none">
