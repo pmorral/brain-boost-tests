@@ -30,10 +30,13 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-            SkillEval AI
+            Puntu.ai
           </h1>
           <p className="text-muted-foreground">
             Plataforma de evaluación de candidatos con IA
+          </p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Desarrollado por HR Leaders LATAM y LaPieza
           </p>
         </div>
         <AuthForm mode={mode} onToggleMode={() => setMode(mode === "signin" ? "signup" : "signin")} />

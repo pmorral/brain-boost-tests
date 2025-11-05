@@ -8,7 +8,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-2"><Brain className="h-8 w-8 text-primary" /><span className="text-2xl font-bold">SkillEval AI</span></div>
+        <div className="flex items-center gap-2"><Brain className="h-8 w-8 text-primary" /><span className="text-2xl font-bold">Puntu.ai</span></div>
         <Button onClick={() => navigate("/auth")}>Ingresar</Button>
       </nav>
       
@@ -28,6 +28,10 @@ const Index = () => {
             <div className="p-6 rounded-lg bg-card border"><TrendingUp className="h-12 w-12 text-secondary mb-4" /><h3 className="font-semibold text-lg mb-2">Resultados Instantáneos</h3><p className="text-sm text-muted-foreground">Dashboard en tiempo real con análisis de desempeño</p></div>
             <div className="p-6 rounded-lg bg-card border"><Brain className="h-12 w-12 text-accent mb-4" /><h3 className="font-semibold text-lg mb-2">Tests Psicométricos</h3><p className="text-sm text-muted-foreground">MBTI, DISC, Big Five y 7 pruebas más</p></div>
           </div>
+          
+          <footer className="mt-20 text-center text-sm text-muted-foreground">
+            <p>Desarrollado por <span className="font-semibold">HR Leaders LATAM</span> y <span className="font-semibold">LaPieza</span></p>
+          </footer>
         </div>
       </main>
     </div>

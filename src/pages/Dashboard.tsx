@@ -79,7 +79,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold">SkillEval AI</h1>
+            <h1 className="text-2xl font-bold">Puntu.ai</h1>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
