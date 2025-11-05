@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, ExternalLink, Loader2, Users, Award } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, Users, Award, ChevronDown, ChevronUp, CheckCircle2, XCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const AssessmentDetails = () => {
   const { id } = useParams();
@@ -13,6 +14,8 @@ const AssessmentDetails = () => {
   const [loading, setLoading] = useState(true);
   const [assessment, setAssessment] = useState<any>(null);
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
+  const [candidateDetails, setCandidateDetails] = useState<any>({});
 
   useEffect(() => {
     loadAssessment();
@@ -54,6 +57,50 @@ const AssessmentDetails = () => {
       console.error("Error loading candidates:", error);
     } else {
       setCandidates(data || []);
+    }
+  };
+
+  const loadCandidateDetails = async (candidateId: string) => {
+    if (candidateDetails[candidateId]) return; // Already loaded
+
+    const { data, error } = await supabase
+      .from("candidate_responses")
+      .select(`
+        *,
+        assessment_questions (
+          question_text,
+          option_a,
+          option_b,
+          option_c,
+          option_d,
+          correct_answer,
+          question_number
+        )
+      `)
+      .eq("candidate_id", candidateId)
+      .order("answered_at", { ascending: true });
+
+    if (error) {
+      console.error("Error loading candidate details:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los detalles del candidato",
+        variant: "destructive",
+      });
+    } else {
+      setCandidateDetails(prev => ({
+        ...prev,
+        [candidateId]: data || []
+      }));
+    }
+  };
+
+  const toggleCandidateExpansion = async (candidateId: string) => {
+    if (expandedCandidate === candidateId) {
+      setExpandedCandidate(null);
+    } else {
+      setExpandedCandidate(candidateId);
+      await loadCandidateDetails(candidateId);
     }
   };
 
@@ -146,6 +193,8 @@ const AssessmentDetails = () => {
                     {candidates.map((candidate) => {
                       const questionsAnswered = candidate.candidate_responses?.[0]?.count || 0;
                       const wasInterrupted = candidate.completed_at && questionsAnswered < 20;
+                      const isExpanded = expandedCandidate === candidate.id;
+                      const details = candidateDetails[candidate.id] || [];
                       
                       return (
                         <Card key={candidate.id} className="overflow-hidden">
@@ -190,6 +239,71 @@ const AssessmentDetails = () => {
                                 </div>
                               )}
                             </div>
+                            
+                            {candidate.completed_at && (
+                              <Collapsible open={isExpanded} onOpenChange={() => toggleCandidateExpansion(candidate.id)}>
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" className="w-full mt-4 justify-between">
+                                    <span>Ver respuestas detalladas</span>
+                                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                  </Button>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent className="mt-4 space-y-3">
+                                  {details.length === 0 ? (
+                                    <div className="text-center py-4">
+                                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                                    </div>
+                                  ) : (
+                                    details.map((response: any, index: number) => {
+                                      const question = response.assessment_questions;
+                                      const options = {
+                                        A: question.option_a,
+                                        B: question.option_b,
+                                        C: question.option_c,
+                                        D: question.option_d,
+                                      };
+                                      
+                                      return (
+                                        <div key={response.id} className={`border rounded-lg p-4 ${response.is_correct ? 'bg-green-50 dark:bg-green-950/20 border-green-300' : 'bg-red-50 dark:bg-red-950/20 border-red-300'}`}>
+                                          <div className="flex items-start gap-2 mb-2">
+                                            {response.is_correct ? (
+                                              <CheckCircle2 className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                                            ) : (
+                                              <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                                            )}
+                                            <div className="flex-1">
+                                              <p className="font-semibold text-sm mb-2">
+                                                Pregunta {question.question_number}: {question.question_text}
+                                              </p>
+                                              <div className="grid grid-cols-1 gap-1 text-sm">
+                                                {Object.entries(options).map(([key, value]) => (
+                                                  <div key={key} className={`py-1 px-2 rounded ${
+                                                    key === response.selected_answer && key === question.correct_answer
+                                                      ? 'bg-green-200 dark:bg-green-900 font-semibold'
+                                                      : key === response.selected_answer
+                                                      ? 'bg-red-200 dark:bg-red-900 font-semibold'
+                                                      : key === question.correct_answer
+                                                      ? 'bg-green-100 dark:bg-green-950 font-medium'
+                                                      : ''
+                                                  }`}>
+                                                    {key}) {value}
+                                                    {key === response.selected_answer && ' ← Respuesta del candidato'}
+                                                    {key === question.correct_answer && key !== response.selected_answer && ' ← Respuesta correcta'}
+                                                  </div>
+                                                ))}
+                                              </div>
+                                              <p className="text-xs text-muted-foreground mt-2">
+                                                Tiempo: {response.time_taken_seconds}s
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </CollapsibleContent>
+                              </Collapsible>
+                            )}
                           </CardContent>
                         </Card>
                       );
