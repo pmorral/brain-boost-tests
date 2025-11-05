@@ -386,12 +386,11 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant="outline"
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal focus:ring-0 focus-visible:ring-2" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:bg-primary/10 hover:text-foreground focus:bg-transparent focus:text-foreground focus-visible:ring-0 active:bg-primary/20" 
                       onClick={() => handleAnswer(option)}
-                      onMouseDown={(e) => e.preventDefault()}
-                      tabIndex={-1}
+                      type="button"
                     >
-                      <div className="flex items-start gap-3 w-full">
+                      <div className="flex items-start gap-3 w-full pointer-events-none">
                         <span className="font-bold flex-shrink-0">{option}.</span>
                         <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
                       </div>
@@ -401,12 +400,11 @@ const TakeAssessment = () => {
                     <Button 
                       key={option} 
                       variant="outline"
-                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal focus:ring-0 focus-visible:ring-2" 
+                      className="w-full justify-start text-left h-auto min-h-[3.5rem] py-4 px-4 whitespace-normal hover:bg-primary/10 hover:text-foreground focus:bg-transparent focus:text-foreground focus-visible:ring-0 active:bg-primary/20" 
                       onClick={() => handleAnswer(option)}
-                      onMouseDown={(e) => e.preventDefault()}
-                      tabIndex={-1}
+                      type="button"
                     >
-                      <div className="flex items-start gap-3 w-full">
+                      <div className="flex items-start gap-3 w-full pointer-events-none">
                         <span className="font-bold flex-shrink-0">{option}.</span>
                         <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
                       </div>
