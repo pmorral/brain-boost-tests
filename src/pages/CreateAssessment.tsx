@@ -230,10 +230,11 @@ const CreateAssessment = () => {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Ej: Senior Developer con 5+ años de experiencia en React, TypeScript, Node.js. Evaluar arquitectura de componentes, gestión de estado, y mejores prácticas."
                       rows={4}
+                      maxLength={5000}
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      La IA generará preguntas personalizadas basándose en estos detalles.
+                      La IA generará preguntas personalizadas basándose en estos detalles. Máximo 5000 caracteres ({description.length}/5000)
                     </p>
                   </div>
                 </>

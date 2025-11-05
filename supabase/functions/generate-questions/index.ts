@@ -14,7 +14,12 @@ serve(async (req) => {
   try {
     const { assessmentId, assessmentType, topic, psychometricType, language = 'es' } = await req.json();
     
-    console.log('Generating questions for:', { assessmentId, assessmentType, topic, psychometricType, language });
+    // Validate topic length to prevent AI API errors
+    if (topic && topic.length > 5000) {
+      throw new Error('Topic exceeds maximum length of 5000 characters');
+    }
+    
+    console.log('Generating questions for:', { assessmentId, assessmentType, topic: topic ? `${topic.substring(0, 100)}...` : null, psychometricType, language });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
