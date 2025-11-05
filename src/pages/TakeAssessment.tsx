@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ const TakeAssessment = () => {
   const [score, setScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
+  const isCompletedRef = useRef(false);
 
   useEffect(() => {
     // Detect if device is mobile
@@ -111,7 +112,8 @@ const TakeAssessment = () => {
     if (step !== "test") return;
 
     const handleVisibilityChange = async () => {
-      if (document.hidden) {
+      // Don't trigger if assessment was already completed normally
+      if (document.hidden && !isCompletedRef.current) {
         toast({
           title: "Evaluación Terminada",
           description: "Saliste de la pestaña. La evaluación ha finalizado.",
@@ -227,19 +229,18 @@ const TakeAssessment = () => {
       setCurrentQuestion(currentQuestion + 1);
       setTimeLeft(40);
     } else {
-      // Show complete screen immediately
-      setStep("complete");
+      // Mark as completed BEFORE changing step to prevent visibility handler from triggering
+      isCompletedRef.current = true;
       
-      // Save data in background with error handling
+      // Save completion data first, then show complete screen
       const finalScore = isLikert ? null : newScore;
-      supabase.from("candidates").update({ 
+      await supabase.from("candidates").update({ 
         completed_at: new Date().toISOString(), 
         total_score: finalScore 
-      }).eq("id", candidateId).then(({ error }) => {
-        if (error) {
-          console.error('Error updating candidate completion:', error);
-        }
-      });
+      }).eq("id", candidateId);
+      
+      // Now show complete screen
+      setStep("complete");
       
       // If it's a Likert assessment, trigger AI analysis in background
       if (isLikert) {
