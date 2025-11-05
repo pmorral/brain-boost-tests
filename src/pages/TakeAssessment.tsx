@@ -239,8 +239,9 @@ const TakeAssessment = () => {
     setResponses([...responses, answer]);
 
     if (currentQuestion < 19) {
-      // Reset selection BEFORE moving to next question
+      // Reset selection and wait for state update before moving to next question
       setSelectedAnswer("");
+      await new Promise(resolve => setTimeout(resolve, 50));
       setCurrentQuestion(currentQuestion + 1);
       setTimeLeft(40);
     } else {
