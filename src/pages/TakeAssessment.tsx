@@ -222,6 +222,13 @@ const TakeAssessment = () => {
   };
 
   const handleAnswer = async (answer: string) => {
+    console.log('Answer clicked:', answer, 'Current question:', currentQuestion);
+    
+    // Force blur from all elements
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
     // Small visual delay so user sees their selection
     await new Promise(resolve => setTimeout(resolve, 150));
     
@@ -384,13 +391,13 @@ const TakeAssessment = () => {
               {questions[currentQuestion]?.correct_answer === 'LIKERT' 
                 ? ["A", "B", "C", "D", "E"].map((option) => (
                     <div
-                      key={`q${currentQuestion}-${option}`}
-                      className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background"
+                      key={`q${currentQuestion}-opt${option}`}
+                      className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background select-none"
                       onClick={() => handleAnswer(option)}
-                      role="button"
-                      tabIndex={0}
+                      onTouchStart={(e) => e.currentTarget.style.borderColor = 'hsl(var(--foreground) / 0.3)'}
+                      onTouchEnd={(e) => e.currentTarget.style.borderColor = ''}
                     >
-                      <div className="flex items-start gap-3 w-full">
+                      <div className="flex items-start gap-3 w-full pointer-events-none">
                         <span className="font-bold flex-shrink-0">{option}.</span>
                         <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
                       </div>
@@ -398,13 +405,13 @@ const TakeAssessment = () => {
                   ))
                 : ["A", "B", "C", "D"].map((option) => (
                     <div
-                      key={`q${currentQuestion}-${option}`}
-                      className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background"
+                      key={`q${currentQuestion}-opt${option}`}
+                      className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background select-none"
                       onClick={() => handleAnswer(option)}
-                      role="button"
-                      tabIndex={0}
+                      onTouchStart={(e) => e.currentTarget.style.borderColor = 'hsl(var(--foreground) / 0.3)'}
+                      onTouchEnd={(e) => e.currentTarget.style.borderColor = ''}
                     >
-                      <div className="flex items-start gap-3 w-full">
+                      <div className="flex items-start gap-3 w-full pointer-events-none">
                         <span className="font-bold flex-shrink-0">{option}.</span>
                         <span className="flex-1 break-words">{questions[currentQuestion]?.[`option_${option.toLowerCase()}`]}</span>
                       </div>
