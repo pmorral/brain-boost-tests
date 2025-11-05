@@ -111,25 +111,37 @@ const TakeAssessment = () => {
   useEffect(() => {
     if (step !== "test") return;
 
+    let visibilityTimer: NodeJS.Timeout | null = null;
+
     const handleVisibilityChange = async () => {
       // Don't trigger if assessment was already completed normally
       if (document.hidden && !isCompletedRef.current) {
-        toast({
-          title: "Evaluación Terminada",
-          description: "Saliste de la pestaña. La evaluación ha finalizado.",
-          variant: "destructive",
-        });
+        // Wait 3 seconds before marking as interrupted (allows for accidental switches, keyboard on mobile, etc.)
+        visibilityTimer = setTimeout(async () => {
+          // Double check they're still hidden and haven't completed
+          if (document.hidden && !isCompletedRef.current) {
+            toast({
+              title: "Evaluación Terminada",
+              description: "Saliste de la pestaña. La evaluación ha finalizado.",
+              variant: "destructive",
+            });
 
-        // Terminar la evaluación inmediatamente
-        await supabase
-          .from("candidates")
-          .update({
-            completed_at: new Date().toISOString(),
-            total_score: score,
-          })
-          .eq("id", candidateId);
+            // Terminar la evaluación inmediatamente
+            await supabase
+              .from("candidates")
+              .update({
+                completed_at: new Date().toISOString(),
+                total_score: score,
+              })
+              .eq("id", candidateId);
 
-        setStep("complete");
+            setStep("complete");
+          }
+        }, 3000);
+      } else if (!document.hidden && visibilityTimer) {
+        // User came back within the grace period, cancel the interruption
+        clearTimeout(visibilityTimer);
+        visibilityTimer = null;
       }
     };
 
@@ -137,6 +149,7 @@ const TakeAssessment = () => {
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (visibilityTimer) clearTimeout(visibilityTimer);
     };
   }, [step, candidateId, score, toast]);
 
