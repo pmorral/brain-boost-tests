@@ -27,6 +27,11 @@ const TakeAssessment = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const isCompletedRef = useRef(false);
 
+  // Reset selected answer when question changes
+  useEffect(() => {
+    setSelectedAnswer("");
+  }, [currentQuestion]);
+
   useEffect(() => {
     // Detect if device is mobile
     const checkMobile = () => {
@@ -239,9 +244,6 @@ const TakeAssessment = () => {
     setResponses([...responses, answer]);
 
     if (currentQuestion < 19) {
-      // Reset selection and wait for state update before moving to next question
-      setSelectedAnswer("");
-      await new Promise(resolve => setTimeout(resolve, 50));
       setCurrentQuestion(currentQuestion + 1);
       setTimeLeft(40);
     } else {
