@@ -301,6 +301,7 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
           option_b: language === 'en' ? 'Disagree' : 'En desacuerdo',
           option_c: language === 'en' ? 'Neutral' : 'Neutral',
           option_d: language === 'en' ? 'Agree' : 'De acuerdo',
+          option_e: language === 'en' ? 'Strongly Agree' : 'Totalmente de acuerdo',
           correct_answer: 'LIKERT',
         };
       }
