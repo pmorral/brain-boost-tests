@@ -10,10 +10,11 @@ import { Loader2 } from "lucide-react";
 interface AuthFormProps {
   mode: "signin" | "signup";
   onToggleMode: () => void;
+  defaultEmail?: string;
 }
 
-export const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
-  const [email, setEmail] = useState("");
+export const AuthForm = ({ mode, onToggleMode, defaultEmail }: AuthFormProps) => {
+  const [email, setEmail] = useState(defaultEmail || "");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [company, setCompany] = useState("");

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 const AssessmentDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const [assessment, setAssessment] = useState<any>(null);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
@@ -20,29 +22,68 @@ const AssessmentDetails = () => {
   const [showQuestions, setShowQuestions] = useState(false);
 
   useEffect(() => {
-    loadAssessment();
-    loadCandidates();
-    loadQuestions();
-  }, [id]);
+    const checkAuthAndLoad = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // Redirigir a auth con return URL
+        const returnUrl = `/assessment/${id}`;
+        navigate(`/auth?redirect=${encodeURIComponent(returnUrl)}`);
+        return;
+      }
+
+      setCheckingAuth(false);
+      loadAssessment();
+      loadQuestions();
+      loadCandidates();
+    };
+
+    checkAuthAndLoad();
+  }, [id, navigate]);
 
   const loadAssessment = async () => {
-    const { data, error } = await supabase
+    const { data: assessmentData, error: assessmentError } = await supabase
       .from("assessments")
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error) {
-      console.error("Error loading assessment:", error);
+    if (assessmentError) {
+      console.error("Error loading assessment:", assessmentError);
       toast({
         title: "Error",
         description: "No se pudo cargar la evaluación",
         variant: "destructive",
       });
       navigate("/dashboard");
-    } else {
-      setAssessment(data);
+      return;
     }
+      
+    // Verificar permisos
+    if (assessmentData) {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      const hasAccess = 
+        assessmentData.recruiter_id === user.id || 
+        (assessmentData.creator_email === user.email && !assessmentData.recruiter_id);
+
+      if (!hasAccess) {
+        toast({
+          title: "Acceso denegado",
+          description: "No tienes permisos para ver esta evaluación",
+          variant: "destructive",
+        });
+        navigate('/dashboard');
+        return;
+      }
+    }
+      
+    setAssessment(assessmentData);
     setLoading(false);
   };
 
@@ -141,7 +182,7 @@ const AssessmentDetails = () => {
     window.open(link, "_blank");
   };
 
-  if (loading) {
+  if (checkingAuth || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

@@ -21,7 +21,7 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         setUser(session.user);
-        loadAssessments(session.user.id);
+        loadAssessments(session.user.id, session.user.email!);
       }
       setLoading(false);
     });
@@ -37,14 +37,14 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const loadAssessments = async (userId: string) => {
+  const loadAssessments = async (userId: string, userEmail: string) => {
     const { data, error } = await supabase
       .from("assessments")
       .select(`
         *,
         candidates(count)
       `)
-      .eq("recruiter_id", userId)
+      .or(`recruiter_id.eq.${userId},creator_email.eq.${userEmail}`)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -169,13 +169,18 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                {assessments.map((assessment) => (
+                 {assessments.map((assessment) => (
                   <Card key={assessment.id} className="cursor-pointer hover:border-primary transition-colors"
                     onClick={() => navigate(`/assessment/${assessment.id}`)}>
                     <CardContent className="pt-6">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-lg">{assessment.title}</h3>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-lg">{assessment.title}</h3>
+                            {!assessment.recruiter_id && assessment.claimed && (
+                              <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded">Reclamada</span>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground mt-1">
                             {assessment.description || "Sin descripción"}
                           </p>

@@ -67,7 +67,9 @@ export type Database = {
       assessments: {
         Row: {
           assessment_type: Database["public"]["Enums"]["assessment_type"]
+          claimed: boolean | null
           created_at: string
+          creator_email: string | null
           custom_topic: string | null
           description: string | null
           expires_at: string | null
@@ -76,13 +78,15 @@ export type Database = {
           psychometric_type:
             | Database["public"]["Enums"]["psychometric_test_type"]
             | null
-          recruiter_id: string
+          recruiter_id: string | null
           share_link: string
           title: string
         }
         Insert: {
           assessment_type: Database["public"]["Enums"]["assessment_type"]
+          claimed?: boolean | null
           created_at?: string
+          creator_email?: string | null
           custom_topic?: string | null
           description?: string | null
           expires_at?: string | null
@@ -91,13 +95,15 @@ export type Database = {
           psychometric_type?:
             | Database["public"]["Enums"]["psychometric_test_type"]
             | null
-          recruiter_id: string
+          recruiter_id?: string | null
           share_link?: string
           title: string
         }
         Update: {
           assessment_type?: Database["public"]["Enums"]["assessment_type"]
+          claimed?: boolean | null
           created_at?: string
+          creator_email?: string | null
           custom_topic?: string | null
           description?: string | null
           expires_at?: string | null
@@ -106,7 +112,7 @@ export type Database = {
           psychometric_type?:
             | Database["public"]["Enums"]["psychometric_test_type"]
             | null
-          recruiter_id?: string
+          recruiter_id?: string | null
           share_link?: string
           title?: string
         }

@@ -1,15 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Brain, ClipboardList, TrendingUp, Sparkles } from "lucide-react";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [email, setEmail] = useState("");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2"><Brain className="h-8 w-8 text-primary" /><span className="text-2xl font-bold">Puntu.ai</span></div>
-        <Button onClick={() => navigate("/auth")}>Ingresar</Button>
+        <Button onClick={() => navigate("/auth")} variant="outline">Ingresar</Button>
       </nav>
       
       <main className="container mx-auto px-4 py-20">
@@ -20,7 +32,8 @@ const Index = () => {
           </div>
           
           <div className="flex flex-wrap gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8"><Sparkles className="mr-2 h-5 w-5" />Comenzar Gratis</Button>
+            <Button size="lg" onClick={() => setShowEmailDialog(true)} className="text-lg px-8"><Sparkles className="mr-2 h-5 w-5" />Crear Evaluación Gratuita</Button>
+            <Button size="lg" onClick={() => navigate("/auth")} variant="outline" className="text-lg px-8">Ya tengo cuenta</Button>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mt-16">
@@ -34,6 +47,44 @@ const Index = () => {
           </footer>
         </div>
       </main>
+
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Crear Evaluación Gratuita</DialogTitle>
+            <DialogDescription>
+              Ingresa tu email para crear una evaluación. Podrás ver los resultados iniciando sesión después.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="tu@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Usaremos este email para asociar la evaluación a tu cuenta cuando inicies sesión.
+              </p>
+            </div>
+            <Button 
+              onClick={() => {
+                if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                  navigate(`/create-assessment?email=${encodeURIComponent(email)}`);
+                }
+              }} 
+              className="w-full"
+              disabled={!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)}
+            >
+              Continuar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Loader2, Sparkles } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const PSYCHOMETRIC_TESTS = [
   { value: "mbti", label: "MBTI - Myers-Briggs Type Indicator" },
@@ -24,33 +25,25 @@ const PSYCHOMETRIC_TESTS = [
 ];
 
 const CreateAssessment = () => {
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [assessmentType, setAssessmentType] = useState<"skills" | "psychometric" | "">("");
   const [psychometricType, setPsychometricType] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState<"es" | "en">("es");
+  const [creatorEmail, setCreatorEmail] = useState(searchParams.get("email") || "");
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth");
-      }
-      setCheckingAuth(false);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    checkAuth();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +51,27 @@ const CreateAssessment = () => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No autenticado");
+      
+      // Validar email si no está autenticado
+      if (!user && !creatorEmail) {
+        toast({
+          title: "Error",
+          description: "Debes proporcionar un email",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!user && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(creatorEmail)) {
+        toast({
+          title: "Error",
+          description: "Email inválido",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
 
       // Validations
       if (!assessmentType) {
@@ -77,18 +90,26 @@ const CreateAssessment = () => {
         throw new Error("Debes seleccionar un tipo de test psicométrico");
       }
 
-      // Create assessment
+      // Create the assessment
+      const assessmentData: any = {
+        assessment_type: assessmentType,
+        title: assessmentType === "skills" ? title : `Prueba ${PSYCHOMETRIC_TESTS.find(t => t.value === psychometricType)?.label}`,
+        description: assessmentType === "skills" ? description : null,
+        custom_topic: assessmentType === "skills" ? description : null,
+        psychometric_type: assessmentType === "psychometric" ? psychometricType : null,
+        language,
+      };
+
+      // Add user id if authenticated, otherwise add email
+      if (user) {
+        assessmentData.recruiter_id = user.id;
+      } else {
+        assessmentData.creator_email = creatorEmail;
+      }
+
       const { data: assessment, error: assessmentError } = await supabase
         .from("assessments")
-        .insert([{
-          recruiter_id: user.id,
-          title: assessmentType === "skills" ? title : PSYCHOMETRIC_TESTS.find(t => t.value === psychometricType)?.label || "",
-          description: assessmentType === "skills" ? description : "",
-          assessment_type: assessmentType,
-          custom_topic: assessmentType === "skills" ? description : null,
-          psychometric_type: psychometricType || null,
-          language,
-        }] as any)
+        .insert(assessmentData)
         .select()
         .single();
 
@@ -118,12 +139,23 @@ const CreateAssessment = () => {
         throw new Error("Error al generar las preguntas");
       }
 
-      toast({
-        title: "¡Evaluación creada!",
-        description: "Las 50 preguntas han sido generadas con IA.",
-      });
-
-      navigate(`/assessment/${assessment.id}`);
+      if (user) {
+        toast({
+          title: "¡Evaluación creada!",
+          description: "Las preguntas están siendo generadas. Serás redirigido en un momento...",
+        });
+        setTimeout(() => {
+          navigate(`/assessment/${assessment.id}`);
+        }, 2000);
+      } else {
+        toast({
+          title: "¡Evaluación creada!",
+          description: "Para ver los resultados, inicia sesión con el email proporcionado.",
+        });
+        setTimeout(() => {
+          navigate(`/auth?email=${encodeURIComponent(creatorEmail)}`);
+        }, 3000);
+      }
     } catch (error: any) {
       console.error("Error:", error);
       toast({
@@ -136,24 +168,26 @@ const CreateAssessment = () => {
     }
   };
 
-  if (checkingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+          <Button variant="ghost" onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver al Dashboard
+            {isAuthenticated ? "Volver al Dashboard" : "Volver al Inicio"}
           </Button>
         </div>
       </header>
+
+      {!isAuthenticated && (
+        <div className="container mx-auto px-4 py-4">
+          <Alert>
+            <AlertDescription>
+              Estás creando una evaluación como invitado. Para ver los resultados, deberás iniciar sesión con: <strong>{creatorEmail}</strong>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8 max-w-3xl">
         <Card>
