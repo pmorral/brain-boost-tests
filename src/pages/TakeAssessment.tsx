@@ -184,6 +184,17 @@ const TakeAssessment = () => {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast({ 
+        title: "Error", 
+        description: "Por favor ingresa un email válido (ejemplo: nombre@correo.com)", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     // Randomly select 20 questions from all 50
     const shuffled = [...questions].sort(() => Math.random() - 0.5);
     const selectedQuestions = shuffled.slice(0, 20);
