@@ -33,7 +33,7 @@ const CreateAssessment = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState<"es" | "en">("es");
-  const [creatorEmail, setCreatorEmail] = useState(searchParams.get("email") || "");
+  const [creatorEmail, setCreatorEmail] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -183,7 +183,7 @@ const CreateAssessment = () => {
         <div className="container mx-auto px-4 py-4">
           <Alert>
             <AlertDescription>
-              Estás creando una evaluación como invitado. Para ver los resultados, deberás iniciar sesión con: <strong>{creatorEmail}</strong>
+              Crea tu evaluación gratuita. Podrás ver los resultados iniciando sesión después.
             </AlertDescription>
           </Alert>
         </div>
@@ -202,6 +202,28 @@ const CreateAssessment = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {!isAuthenticated && (
+                <div className="space-y-2">
+                  <Label htmlFor="email">
+                    Tu Email *
+                    <span className="text-sm text-muted-foreground ml-2">
+                      (Para asociar la evaluación a tu cuenta)
+                    </span>
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={creatorEmail}
+                    onChange={(e) => setCreatorEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    required={!isAuthenticated}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Podrás ver los resultados iniciando sesión con este email
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="type">Tipo de Evaluación *</Label>
                 <Select
