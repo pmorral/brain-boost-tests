@@ -321,20 +321,20 @@ const CreateAssessment = () => {
                     <Label htmlFor="description">
                       Detalles de la Evaluación *
                       <span className="text-sm text-muted-foreground ml-2">
-                        (Incluye seniority y habilidades a evaluar)
+                        (Enfócate en 1-3 skills específicos)
                       </span>
                     </Label>
                     <Textarea
                       id="description"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Ej: Senior Developer con 5+ años de experiencia en React, TypeScript, Node.js. Evaluar arquitectura de componentes, gestión de estado, y mejores prácticas."
-                      rows={4}
-                      maxLength={5000}
+                      placeholder="Ej: Excel avanzado para contadores: tablas dinámicas, macros y análisis financiero"
+                      rows={3}
+                      maxLength={300}
                       required
                     />
                     <p className="text-xs text-muted-foreground">
-                      La IA generará preguntas personalizadas basándose en estos detalles. Máximo 5000 caracteres ({description.length}/5000)
+                      Sé específico para obtener mejores preguntas. Máximo 300 caracteres ({description.length}/300)
                     </p>
                   </div>
                 </>
