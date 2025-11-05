@@ -337,12 +337,34 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
       const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
       questions = JSON.parse(cleanContent);
     } catch (parseError) {
-      console.error('Failed to parse AI response:', content);
+      console.error('Failed to parse AI response:', content.substring(0, 500));
       throw new Error('Failed to parse AI-generated questions');
     }
 
-    if (!Array.isArray(questions) || questions.length !== 50) {
-      throw new Error('AI did not return exactly 50 questions');
+    if (!Array.isArray(questions)) {
+      console.error('AI response is not an array:', typeof questions);
+      throw new Error('AI response is not a valid array of questions');
+    }
+
+    console.log(`AI returned ${questions.length} questions`);
+
+    // Handle cases where AI doesn't return exactly 50 questions
+    if (questions.length < 40) {
+      console.error(`AI returned too few questions: ${questions.length}`);
+      throw new Error(`AI returned only ${questions.length} questions. Minimum required is 40.`);
+    }
+
+    if (questions.length < 50) {
+      console.log(`AI returned ${questions.length} questions, adjusting to 50...`);
+      // Duplicate random questions to reach 50
+      while (questions.length < 50) {
+        const randomIndex = Math.floor(Math.random() * questions.length);
+        questions.push({ ...questions[randomIndex] });
+      }
+    } else if (questions.length > 50) {
+      console.log(`AI returned ${questions.length} questions, trimming to 50...`);
+      // Take only the first 50 questions
+      questions = questions.slice(0, 50);
     }
 
     // Validate and redistribute correct answers if needed (for non-Likert questions)
