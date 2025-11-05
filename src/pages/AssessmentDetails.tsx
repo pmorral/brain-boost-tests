@@ -385,9 +385,22 @@ const AssessmentDetails = () => {
                                             <Award className="h-5 w-5" />
                                             Análisis Psicométrico por IA
                                           </h4>
-                                          <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap">
-                                            {candidate.psychometric_analysis}
-                                          </p>
+                                          <div className="text-sm text-blue-800 dark:text-blue-200 space-y-3">
+                                            {candidate.psychometric_analysis.split('\n\n').map((paragraph: string, idx: number) => {
+                                              // Process bold text (**text**)
+                                              const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+                                              return (
+                                                <p key={idx}>
+                                                  {parts.map((part: string, partIdx: number) => {
+                                                    if (part.startsWith('**') && part.endsWith('**')) {
+                                                      return <strong key={partIdx}>{part.slice(2, -2)}</strong>;
+                                                    }
+                                                    return part;
+                                                  })}
+                                                </p>
+                                              );
+                                            })}
+                                          </div>
                                         </div>
                                       )}
                                       {details.map((response: any, index: number) => {
