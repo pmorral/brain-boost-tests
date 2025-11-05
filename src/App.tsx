@@ -25,6 +25,7 @@ const App = () => (
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-assessment" element={<CreateAssessment />} />
           <Route path="/assessment/:id" element={<AssessmentDetails />} />
+          <Route path="/take/:shareLink" element={<TakeAssessment />} />
           <Route path="/take-assessment/:shareLink" element={<TakeAssessment />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
