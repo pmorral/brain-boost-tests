@@ -51,16 +51,25 @@ CRITICAL: Questions must be answerable in 40 seconds. Keep everything SHORT:
 - Answer options: Maximum 1 line each
 - Use simple, direct language
 
+DIFFICULTY LEVEL:
+- Default to SENIOR level difficulty unless the requirements explicitly mention junior or mid-level
+- Senior questions should test deep understanding, best practices, and real-world scenarios
+- Consider the seniority level mentioned to adjust difficulty appropriately
+
 Analyze the requirements to determine the appropriate mix of:
 - Technical/hard skills questions (testing practical knowledge, problem-solving, best practices)
 - Soft skills questions (testing interpersonal abilities, emotional intelligence, professional behavior)
-- Consider the seniority level mentioned to adjust difficulty appropriately
 
 Each question must have:
 - A BRIEF, clear question (no long scenarios or context)
 - 4 SHORT answer options (A, B, C, D)
 - Exactly one correct answer
 - Progressive difficulty throughout the assessment
+
+CRITICAL - CORRECT ANSWER DISTRIBUTION:
+- Distribute correct answers EVENLY across all options (approximately 12-13 questions for each letter)
+- DO NOT favor A or B - use C and D equally as correct answers
+- Example distribution: ~12 questions with A correct, ~13 with B, ~12 with C, ~13 with D
 
 Format each question as JSON:
 {
@@ -82,16 +91,25 @@ CRÍTICO: Las preguntas deben responderse en 40 segundos. Mantén todo CORTO:
 - Opciones de respuesta: Máximo 1 línea cada una
 - Usa lenguaje simple y directo
 
+NIVEL DE DIFICULTAD:
+- Por defecto usa nivel SENIOR a menos que los requisitos mencionen explícitamente nivel junior o mid-level
+- Las preguntas senior deben evaluar comprensión profunda, mejores prácticas y escenarios del mundo real
+- Considera el nivel de seniority mencionado para ajustar la dificultad apropiadamente
+
 Analiza los requisitos para determinar la combinación apropiada de:
 - Preguntas de habilidades técnicas/hard skills (evaluando conocimiento práctico, resolución de problemas, mejores prácticas)
 - Preguntas de habilidades blandas/soft skills (evaluando capacidades interpersonales, inteligencia emocional, comportamiento profesional)
-- Considera el nivel de seniority mencionado para ajustar la dificultad apropiadamente
 
 Cada pregunta debe tener:
 - Una pregunta BREVE y clara (sin escenarios largos o contexto extenso)
 - 4 opciones de respuesta CORTAS (A, B, C, D)
 - Exactamente una respuesta correcta
 - Dificultad progresiva a lo largo de la evaluación
+
+CRÍTICO - DISTRIBUCIÓN DE RESPUESTAS CORRECTAS:
+- Distribuye las respuestas correctas UNIFORMEMENTE entre todas las opciones (aproximadamente 12-13 preguntas para cada letra)
+- NO favorezcas A o B - usa C y D igualmente como respuestas correctas
+- Ejemplo de distribución: ~12 preguntas con A correcta, ~13 con B, ~12 con C, ~13 con D
 
 Formatea cada pregunta como JSON:
 {
@@ -207,6 +225,11 @@ Each question must:
 - Have exactly one correct answer
 - Test problem-solving, logical reasoning, and learning aptitude
 
+CRITICAL - CORRECT ANSWER DISTRIBUTION:
+- Distribute correct answers EVENLY across all options (approximately 12-13 questions for each letter)
+- DO NOT favor A or B - use C and D equally as correct answers
+- Example distribution: ~12 questions with A correct, ~13 with B, ~12 with C, ~13 with D
+
 Format each question as JSON:
 {
   "question": "brief question text",
@@ -233,6 +256,11 @@ Cada pregunta debe:
 - Tener 4 opciones de respuesta CORTAS (A, B, C, D)
 - Tener exactamente una respuesta correcta
 - Evaluar resolución de problemas, razonamiento lógico y aptitud de aprendizaje
+
+CRÍTICO - DISTRIBUCIÓN DE RESPUESTAS CORRECTAS:
+- Distribuye las respuestas correctas UNIFORMEMENTE entre todas las opciones (aproximadamente 12-13 preguntas para cada letra)
+- NO favorezcas A o B - usa C y D igualmente como respuestas correctas
+- Ejemplo de distribución: ~12 preguntas con A correcta, ~13 con B, ~12 con C, ~13 con D
 
 Formatea cada pregunta como JSON:
 {
