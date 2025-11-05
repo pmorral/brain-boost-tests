@@ -16,10 +16,13 @@ const AssessmentDetails = () => {
   const [candidates, setCandidates] = useState<any[]>([]);
   const [expandedCandidate, setExpandedCandidate] = useState<string | null>(null);
   const [candidateDetails, setCandidateDetails] = useState<any>({});
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [showQuestions, setShowQuestions] = useState(false);
 
   useEffect(() => {
     loadAssessment();
     loadCandidates();
+    loadQuestions();
   }, [id]);
 
   const loadAssessment = async () => {
@@ -41,6 +44,20 @@ const AssessmentDetails = () => {
       setAssessment(data);
     }
     setLoading(false);
+  };
+
+  const loadQuestions = async () => {
+    const { data, error } = await supabase
+      .from("assessment_questions")
+      .select("*")
+      .eq("assessment_id", id)
+      .order("question_number", { ascending: true });
+
+    if (error) {
+      console.error("Error loading questions:", error);
+    } else {
+      setQuestions(data || []);
+    }
   };
 
   const loadCandidates = async () => {
@@ -169,6 +186,57 @@ const AssessmentDetails = () => {
                   )}
                 </div>
               </CardHeader>
+            </Card>
+
+            {/* Generated Questions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Preguntas Generadas por IA</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowQuestions(!showQuestions)}
+                  >
+                    {showQuestions ? <ChevronUp className="h-4 w-4 mr-2" /> : <ChevronDown className="h-4 w-4 mr-2" />}
+                    {showQuestions ? "Ocultar" : "Ver"} Preguntas
+                  </Button>
+                </CardTitle>
+                <CardDescription>
+                  {questions.length} preguntas generadas para esta evaluación
+                </CardDescription>
+              </CardHeader>
+              {showQuestions && (
+                <CardContent>
+                  <div className="space-y-4">
+                    {questions.map((question, index) => (
+                      <div key={question.id} className="border rounded-lg p-4 bg-muted/30">
+                        <p className="font-semibold mb-3">
+                          {question.question_number}. {question.question_text}
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 text-sm ml-4">
+                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'A' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
+                            A) {question.option_a}
+                            {question.correct_answer === 'A' && ' ✓ Correcta'}
+                          </div>
+                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'B' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
+                            B) {question.option_b}
+                            {question.correct_answer === 'B' && ' ✓ Correcta'}
+                          </div>
+                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'C' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
+                            C) {question.option_c}
+                            {question.correct_answer === 'C' && ' ✓ Correcta'}
+                          </div>
+                          <div className={`py-2 px-3 rounded ${question.correct_answer === 'D' ? 'bg-green-100 dark:bg-green-950 border border-green-300 font-semibold' : 'bg-background'}`}>
+                            D) {question.option_d}
+                            {question.correct_answer === 'D' && ' ✓ Correcta'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
 
             {/* Candidates Results */}
