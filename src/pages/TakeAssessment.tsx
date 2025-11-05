@@ -26,8 +26,6 @@ const TakeAssessment = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string>("");
   const isCompletedRef = useRef(false);
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
-  const tabSwitchTimeRef = useRef<number>(0);
 
   useEffect(() => {
     // Detect if device is mobile
@@ -116,20 +114,19 @@ const TakeAssessment = () => {
     let visibilityTimer: NodeJS.Timeout | null = null;
 
     const handleVisibilityChange = async () => {
+      // Don't trigger if assessment was already completed normally
       if (document.hidden && !isCompletedRef.current) {
-        // Record when they left
-        tabSwitchTimeRef.current = Date.now();
-        
-        // Wait 30 seconds - if they don't come back, end the test
+        // Wait 3 seconds before marking as interrupted (allows for accidental switches, keyboard on mobile, etc.)
         visibilityTimer = setTimeout(async () => {
+          // Double check they're still hidden and haven't completed
           if (document.hidden && !isCompletedRef.current) {
             toast({
               title: "Evaluación Terminada",
-              description: "Estuviste fuera más de 30 segundos. La evaluación ha finalizado.",
+              description: "Saliste de la pestaña. La evaluación ha finalizado.",
               variant: "destructive",
             });
 
-            // Mark as completed but don't change the score
+            // Terminar la evaluación inmediatamente
             await supabase
               .from("candidates")
               .update({
@@ -140,47 +137,11 @@ const TakeAssessment = () => {
 
             setStep("complete");
           }
-        }, 30000); // 30 seconds
-      } else if (!document.hidden && !isCompletedRef.current) {
-        // They came back
-        if (visibilityTimer) {
-          clearTimeout(visibilityTimer);
-          visibilityTimer = null;
-        }
-
-        // Check how long they were gone
-        const timeAway = Date.now() - tabSwitchTimeRef.current;
-        
-        if (timeAway > 1000) { // More than 1 second away (filters out accidental switches)
-          const newCount = tabSwitchCount + 1;
-          setTabSwitchCount(newCount);
-          
-          if (newCount >= 3) {
-            // Third violation - end the test
-            toast({
-              title: "Evaluación Terminada",
-              description: "Has cambiado de pestaña 3 veces. La evaluación ha finalizado.",
-              variant: "destructive",
-            });
-
-            await supabase
-              .from("candidates")
-              .update({
-                completed_at: new Date().toISOString(),
-                total_score: score,
-              })
-              .eq("id", candidateId);
-
-            setStep("complete");
-          } else {
-            // Warning
-            toast({
-              title: "⚠️ Advertencia",
-              description: `Has cambiado de pestaña (${newCount}/3). A la tercera vez, la evaluación terminará automáticamente.`,
-              variant: "destructive",
-            });
-          }
-        }
+        }, 3000);
+      } else if (!document.hidden && visibilityTimer) {
+        // User came back within the grace period, cancel the interruption
+        clearTimeout(visibilityTimer);
+        visibilityTimer = null;
       }
     };
 
@@ -190,7 +151,7 @@ const TakeAssessment = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (visibilityTimer) clearTimeout(visibilityTimer);
     };
-  }, [step, candidateId, score, toast, tabSwitchCount]);
+  }, [step, candidateId, score, toast]);
 
   const loadAssessment = async () => {
     try {
