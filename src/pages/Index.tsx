@@ -31,7 +31,7 @@ const Index = () => {
           </div>
           
           <footer className="mt-20 text-center text-sm text-muted-foreground">
-            <p>Desarrollado por <span className="font-semibold">HR Leaders LATAM</span> y <span className="font-semibold">LaPieza</span></p>
+            <p>Desarrollado por <a href="https://hrleaders.lat/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-primary transition-colors">HR Leaders LATAM</a> y <a href="https://lapieza.io/" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-primary transition-colors">LaPieza</a></p>
           </footer>
         </div>
       </main>
