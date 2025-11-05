@@ -61,7 +61,12 @@ const CreateAssessment = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (loading) return;
     setLoading(true);
+
+    let createdAssessmentId: string | null = null;
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -121,6 +126,31 @@ const CreateAssessment = () => {
         assessmentData.creator_email = creatorEmail;
       }
 
+      // Check for recent duplicate (within last 2 minutes)
+      if (user) {
+        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+        const { data: recentAssessments } = await supabase
+          .from("assessments")
+          .select("id, created_at")
+          .eq("recruiter_id", user.id)
+          .eq("title", assessmentData.title)
+          .gte("created_at", twoMinutesAgo)
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (recentAssessments && recentAssessments.length > 0) {
+          toast({
+            title: "Evaluación duplicada detectada",
+            description: "Ya creaste esta evaluación recientemente. Redirigiendo...",
+          });
+          setTimeout(() => {
+            navigate(`/assessment/${recentAssessments[0].id}`);
+          }, 1500);
+          setLoading(false);
+          return;
+        }
+      }
+
       const { data: assessment, error: assessmentError } = await supabase
         .from("assessments")
         .insert(assessmentData)
@@ -128,6 +158,8 @@ const CreateAssessment = () => {
         .single();
 
       if (assessmentError) throw assessmentError;
+      
+      createdAssessmentId = assessment.id;
 
       toast({
         title: "Generando preguntas...",
@@ -150,7 +182,11 @@ const CreateAssessment = () => {
 
       if (generateError) {
         console.error("Error generating questions:", generateError);
-        throw new Error("Error al generar las preguntas");
+        // Delete the assessment if question generation fails
+        if (createdAssessmentId) {
+          await supabase.from("assessments").delete().eq("id", createdAssessmentId);
+        }
+        throw new Error("Error al generar las preguntas. Por favor intenta de nuevo.");
       }
 
       // Wait a bit to ensure questions are generated
@@ -180,7 +216,11 @@ const CreateAssessment = () => {
       }
 
       if (!questionsReady) {
-        throw new Error("Las preguntas están tardando en generarse. Por favor espera unos momentos y recarga la página.");
+        // Delete the assessment if questions weren't generated
+        if (createdAssessmentId) {
+          await supabase.from("assessments").delete().eq("id", createdAssessmentId);
+        }
+        throw new Error("Las preguntas tardaron demasiado en generarse. Por favor intenta de nuevo.");
       }
 
       if (user) {
