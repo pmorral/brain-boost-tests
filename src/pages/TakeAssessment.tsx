@@ -23,8 +23,21 @@ const TakeAssessment = () => {
   const [email, setEmail] = useState("");
   const [responses, setResponses] = useState<string[]>([]);
   const [score, setScore] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Detect if device is mobile
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const mobileKeywords = ['android', 'webos', 'iphone', 'ipad', 'ipod', 'blackberry', 'windows phone'];
+      const isMobileDevice = mobileKeywords.some(keyword => userAgent.includes(keyword)) || 
+                            (window.innerWidth <= 768);
+      setIsMobile(isMobileDevice);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     loadAssessment();
     
     // Prevent screenshots and screen recording
@@ -71,6 +84,7 @@ const TakeAssessment = () => {
     disableSelection();
 
     return () => {
+      window.removeEventListener('resize', checkMobile);
       document.removeEventListener('contextmenu', disableRightClick);
       document.removeEventListener('copy', disableCopy);
       document.body.style.userSelect = '';
@@ -209,6 +223,47 @@ const TakeAssessment = () => {
           <CardContent className="pt-8 space-y-4">
             <h2 className="text-2xl font-bold">Evaluación no encontrada</h2>
             <p className="text-muted-foreground">El link que estás intentando usar no es válido o la evaluación ya no está disponible.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show mobile-only message if accessed from desktop
+  if (!isMobile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted to-primary/5 flex items-center justify-center p-4">
+        <Card className="w-full max-w-lg text-center">
+          <CardContent className="pt-8 space-y-6">
+            <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold">Solo Dispositivos Móviles</h2>
+              <p className="text-muted-foreground">
+                Por razones de seguridad, esta evaluación solo puede ser tomada desde un dispositivo móvil (teléfono o tablet).
+              </p>
+            </div>
+            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-500 rounded-lg p-4 text-left">
+              <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
+                📱 Instrucciones:
+              </h3>
+              <ol className="text-sm text-amber-800 dark:text-amber-200 space-y-1 list-decimal list-inside">
+                <li>Copia este link en tu dispositivo móvil</li>
+                <li>Abre el link desde tu teléfono o tablet</li>
+                <li>Completa la evaluación desde allí</li>
+              </ol>
+            </div>
+            <div className="bg-muted p-3 rounded-lg">
+              <p className="text-xs text-muted-foreground break-all">
+                {window.location.href}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Esta medida ayuda a prevenir fraudes y garantiza la integridad de la evaluación.
+            </p>
           </CardContent>
         </Card>
       </div>
