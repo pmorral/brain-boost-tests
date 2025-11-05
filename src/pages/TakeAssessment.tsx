@@ -407,16 +407,10 @@ const TakeAssessment = () => {
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-8 space-y-6">
             <CheckCircle2 className="h-16 w-16 text-secondary mx-auto" />
-            <div><h2 className="text-3xl font-bold">¡Evaluación Completada!</h2><p className="text-muted-foreground mt-2">Gracias por completar la evaluación</p></div>
-            {questions[0]?.correct_answer === 'LIKERT' ? (
-              <div className="bg-primary/10 rounded-lg p-6">
-                <div className="text-4xl font-bold text-primary">N/A</div>
-                <div className="text-sm text-muted-foreground mt-2">Evaluación psicométrica</div>
-                <p className="text-sm mt-4">Esta evaluación no tiene puntuación. El reclutador analizará tus respuestas para entender tu perfil.</p>
-              </div>
-            ) : (
-              <div className="bg-primary/10 rounded-lg p-6"><div className="text-5xl font-bold text-primary">{score}/20</div><div className="text-sm text-muted-foreground mt-2">Respuestas correctas</div><div className="text-2xl font-semibold text-primary mt-2">{Math.round((score / 20) * 100)}%</div></div>
-            )}
+            <div>
+              <h2 className="text-3xl font-bold">¡Evaluación Completada!</h2>
+              <p className="text-muted-foreground mt-2">Gracias por completar la evaluación</p>
+            </div>
             <p className="text-sm text-muted-foreground">Los resultados han sido enviados al reclutador.</p>
           </CardContent>
         </Card>
