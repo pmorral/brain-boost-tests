@@ -417,7 +417,7 @@ const AssessmentDetails = () => {
                                             )}
                                             <div className="flex-1">
                                               <p className="font-semibold text-sm mb-2">
-                                                Pregunta {question.question_number}: {question.question_text}
+                                                Pregunta {index + 1}: {question.question_text}
                                               </p>
                                               {isLikert && (
                                                 <p className="text-xs text-muted-foreground mb-2 italic">
