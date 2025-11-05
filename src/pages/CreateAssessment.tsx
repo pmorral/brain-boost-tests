@@ -153,6 +153,36 @@ const CreateAssessment = () => {
         throw new Error("Error al generar las preguntas");
       }
 
+      // Wait a bit to ensure questions are generated
+      toast({
+        title: "Finalizando...",
+        description: "Verificando que las preguntas estén listas",
+      });
+
+      // Poll for questions to be ready
+      let questionsReady = false;
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max
+
+      while (!questionsReady && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const { data: questionsCheck, error: checkError } = await supabase
+          .from("assessment_questions")
+          .select("id")
+          .eq("assessment_id", assessment.id)
+          .limit(1);
+
+        if (!checkError && questionsCheck && questionsCheck.length > 0) {
+          questionsReady = true;
+        }
+        attempts++;
+      }
+
+      if (!questionsReady) {
+        throw new Error("Las preguntas están tardando en generarse. Por favor espera unos momentos y recarga la página.");
+      }
+
       if (user) {
         toast({
           title: "¡Evaluación creada!",

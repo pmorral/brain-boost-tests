@@ -145,6 +145,12 @@ const TakeAssessment = () => {
         toast({ title: "Error", description: "Error al cargar la evaluación", variant: "destructive" });
       } else if (!data) {
         toast({ title: "Error", description: "Evaluación no encontrada", variant: "destructive" });
+      } else if (!data.assessment_questions || data.assessment_questions.length === 0) {
+        toast({ 
+          title: "Evaluación en preparación", 
+          description: "Las preguntas se están generando. Por favor espera unos segundos y recarga la página.", 
+          variant: "default" 
+        });
       } else {
         setAssessment(data);
         const sortedQuestions = data.assessment_questions?.sort((a: any, b: any) => a.question_number - b.question_number) || [];
