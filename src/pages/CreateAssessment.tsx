@@ -223,6 +223,43 @@ const CreateAssessment = () => {
         throw new Error("Las preguntas tardaron demasiado en generarse. Por favor intenta de nuevo.");
       }
 
+      // Get user profile data for notifications
+      let creatorName = '';
+      let company = '';
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, company")
+          .eq("id", user.id)
+          .single();
+        
+        if (profile) {
+          creatorName = profile.full_name || '';
+          company = profile.company || '';
+        }
+      }
+
+      // Send notifications to Slack and Google Sheets
+      const shareUrl = `${window.location.origin}/take-assessment/${assessment.share_link}`;
+      try {
+        await supabase.functions.invoke("notify-assessment-created", {
+          body: {
+            title: assessment.title,
+            assessmentType,
+            psychometricType: psychometricType || null,
+            description: description || null,
+            language,
+            creatorEmail: user ? user.email : creatorEmail,
+            creatorName,
+            company,
+            shareLink: shareUrl
+          }
+        });
+      } catch (notifError) {
+        console.error("Error sending notifications:", notifError);
+        // Don't fail the whole process if notifications fail
+      }
+
       if (user) {
         toast({
           title: "¡Evaluación creada!",

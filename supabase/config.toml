@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.analyze-psychometric]
 verify_jwt = false
+
+[functions.notify-assessment-created]
+verify_jwt = false
