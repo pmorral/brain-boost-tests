@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.notify-assessment-created]
 verify_jwt = false
+
+[functions.notify-candidate-completed]
+verify_jwt = false

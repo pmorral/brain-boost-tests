@@ -257,13 +257,28 @@ const TakeAssessment = () => {
       
       // Save completion data first, then show complete screen
       const finalScore = isLikert ? null : newScore;
+      const completedAt = new Date().toISOString();
       await supabase.from("candidates").update({ 
-        completed_at: new Date().toISOString(), 
+        completed_at: completedAt, 
         total_score: finalScore 
       }).eq("id", candidateId);
       
       // Now show complete screen
       setStep("complete");
+      
+      // Send notifications in background
+      supabase.functions.invoke('notify-candidate-completed', {
+        body: {
+          candidateName: fullName,
+          candidateEmail: email,
+          assessmentTitle: assessment.title,
+          assessmentType: assessment.assessment_type,
+          psychometricType: assessment.psychometric_type,
+          score: finalScore,
+          totalQuestions: 20,
+          completedAt
+        }
+      }).catch(error => console.error('Error sending completion notifications:', error));
       
       // If it's a Likert assessment, trigger AI analysis in background
       if (isLikert) {
