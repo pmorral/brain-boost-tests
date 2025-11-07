@@ -8,7 +8,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/5">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-2"><Brain className="h-8 w-8 text-primary" /><span className="text-2xl font-bold">Puntu.ai</span></div>
+        <div className="flex items-center gap-2"><Brain className="h-8 w-8 text-primary" /><span className="text-2xl font-bold">Puntú.ai</span></div>
         <Button onClick={() => navigate("/auth")} variant="outline">Ingresar</Button>
       </nav>
       
