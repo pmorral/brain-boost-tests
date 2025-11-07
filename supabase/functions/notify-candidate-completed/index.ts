@@ -2,21 +2,22 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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";
-const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/a/macros/lapieza.io/s/AKfycbz4ShXMaJ1Re-d6tWk0ZTkkPxnLLu_hMIYHDXNkUc_eb7AVlZ7nkEEQ-R7GLNCdJQHj/exec";
+const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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";
+const GOOGLE_SHEETS_WEBHOOK_URL =
+  "https://script.google.com/a/macros/lapieza.io/s/AKfycbz4ShXMaJ1Re-d6tWk0ZTkkPxnLLu_hMIYHDXNkUc_eb7AVlZ7nkEEQ-R7GLNCdJQHj/exec";
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { 
+    const {
       candidateName,
       candidateEmail,
       assessmentTitle,
@@ -24,7 +25,7 @@ serve(async (req) => {
       psychometricType,
       score,
       totalQuestions,
-      completedAt
+      completedAt,
     } = await req.json();
 
     console.log("Sending candidate completion notifications for:", candidateName);
@@ -43,55 +44,55 @@ serve(async (req) => {
             text: {
               type: "plain_text",
               text: "✅ Candidato Completó Evaluación",
-              emoji: true
-            }
+              emoji: true,
+            },
           },
           {
             type: "section",
             fields: [
               {
                 type: "mrkdwn",
-                text: `*Candidato:*\n${candidateName}`
+                text: `*Candidato:*\n${candidateName}`,
               },
               {
                 type: "mrkdwn",
-                text: `*Email:*\n${candidateEmail}`
+                text: `*Email:*\n${candidateEmail}`,
               },
               {
                 type: "mrkdwn",
-                text: `*Evaluación:*\n${assessmentTitle}`
+                text: `*Evaluación:*\n${assessmentTitle}`,
               },
               {
                 type: "mrkdwn",
-                text: `*Tipo:*\n${assessmentTypeLabel}`
+                text: `*Tipo:*\n${assessmentTypeLabel}`,
               },
               {
                 type: "mrkdwn",
-                text: `*Puntaje:*\n${scoreDisplay}`
+                text: `*Puntaje:*\n${scoreDisplay}`,
               },
               {
                 type: "mrkdwn",
-                text: `*Completado:*\n${new Date(completedAt).toLocaleString('es-MX')}`
-              }
-            ]
-          }
-        ]
+                text: `*Completado:*\n${new Date(completedAt).toLocaleString("es-MX")}`,
+              },
+            ],
+          },
+        ],
       };
 
       if (psychometricType) {
         const fieldsBlock = slackMessage.blocks[1];
-        if (fieldsBlock && 'fields' in fieldsBlock && fieldsBlock.fields) {
+        if (fieldsBlock && "fields" in fieldsBlock && fieldsBlock.fields) {
           fieldsBlock.fields.push({
             type: "mrkdwn",
-            text: `*Test Psicométrico:*\n${psychometricType}`
+            text: `*Test Psicométrico:*\n${psychometricType}`,
           });
         }
       }
 
       const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(slackMessage),
       });
@@ -112,17 +113,17 @@ serve(async (req) => {
         candidateEmail,
         assessmentTitle,
         assessmentType: assessmentTypeLabel,
-        psychometricType: psychometricType || 'N/A',
+        psychometricType: psychometricType || "N/A",
         score: scoreDisplay,
         totalQuestions: totalQuestions.toString(),
         completedAt: new Date(completedAt).toISOString(),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       const sheetsResponse = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(sheetsData),
       });
@@ -136,19 +137,15 @@ serve(async (req) => {
       console.error("Error with Google Sheets:", sheetsError);
     }
 
-    return new Response(
-      JSON.stringify({ success: true, message: "Notifications sent" }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ success: true, message: "Notifications sent" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error('Error in notify-candidate-completed function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    console.error("Error in notify-candidate-completed function:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
