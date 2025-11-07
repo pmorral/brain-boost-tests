@@ -15,7 +15,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-transparent">Evalúa Candidatos con IA</h1>
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-primary to-secondary bg-clip-text text-transparent">Puntúa candidatos con IA</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Genera evaluaciones personalizadas de hard skills, soft skills y pruebas psicométricas en segundos</p>
           </div>
           
