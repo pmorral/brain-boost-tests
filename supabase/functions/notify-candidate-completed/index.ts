@@ -62,6 +62,7 @@ serve(async (req) => {
 
     // Send Slack notification
     try {
+      console.log(SLACK_WEBHOOK_URL);
       if (!SLACK_WEBHOOK_URL) {
         console.error("SLACK_WEBHOOK_URL secret is not set");
         // Continuar sin Slack, pero no interrumpir el flujo
