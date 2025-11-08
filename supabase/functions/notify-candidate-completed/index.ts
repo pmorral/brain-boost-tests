@@ -39,6 +39,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  console.log("version: 1.0.0");
 
   try {
     const {
@@ -130,7 +131,7 @@ serve(async (req) => {
         }
       }
 
-      console.log(slackMessage);
+      console.log("slackMessage", slackMessage);
 
       const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
         method: "POST",
@@ -164,7 +165,7 @@ serve(async (req) => {
         status: isExit ? "Exited" : "Completed",
         reason: isExit ? "tab_exit" : "completed",
       };
-      console.log(sheetsData);
+      console.log("sheetsData", sheetsData);
 
       const sheetsResponse = await postWithRedirects(GOOGLE_SHEETS_WEBHOOK_URL, sheetsData, 10);
 
