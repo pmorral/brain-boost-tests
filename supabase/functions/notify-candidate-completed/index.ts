@@ -6,9 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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";
+const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL") ?? "";
 const GOOGLE_SHEETS_WEBHOOK_URL =
-  "https://script.google.com/macros/s/AKfycbzalr_bQoCLtqqbCLR84QRB-BXs2gL-tBv_E1EbUgdJkzk7YrBP1xJ96FPrjYv2SiAk/exec";
+  "https://script.google.com/a/macros/lapieza.io/s/AKfycbz4ShXMaJ1Re-d6tWk0ZTkkPxnLLu_hMIYHDXNkUc_eb7AVlZ7nkEEQ-R7GLNCdJQHj/exec";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -18,32 +18,38 @@ serve(async (req) => {
 
   try {
     const {
-      candidateName,
-      candidateEmail,
-      assessmentTitle,
+      title,
       assessmentType,
       psychometricType,
-      score,
-      totalQuestions,
-      completedAt,
+      description,
+      language,
+      creatorEmail,
+      creatorName,
+      company,
+      shareLink,
     } = await req.json();
 
-    console.log("Sending candidate completion notifications for:", candidateName);
+    console.log("Sending notifications for assessment:", title);
 
     // Prepare data for notifications
     const assessmentTypeLabel = assessmentType === "skills" ? "Hard & Soft Skills" : "Prueba Psicométrica";
-    const scoreDisplay = score !== null ? `${score}/${totalQuestions}` : "Análisis pendiente";
+    const languageLabel = language === "es" ? "Español" : "English";
 
     // Send Slack notification
     try {
+      if (!SLACK_WEBHOOK_URL) {
+        console.error("SLACK_WEBHOOK_URL secret is not set");
+        // Continuar sin Slack, pero no interrumpir el flujo
+        throw new Error("Missing SLACK_WEBHOOK_URL");
+      }
       const slackMessage = {
-        text: "✅ Candidato Completó Evaluación",
+        text: "🎯 Nueva Evaluación Creada",
         blocks: [
           {
             type: "header",
             text: {
               type: "plain_text",
-              text: "✅ Candidato Completó Evaluación",
+              text: "🎯 Nueva Evaluación Creada",
               emoji: true,
             },
           },
@@ -52,15 +58,7 @@ serve(async (req) => {
             fields: [
               {
                 type: "mrkdwn",
-                text: `*Candidato:*\n${candidateName}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*Email:*\n${candidateEmail}`,
-              },
-              {
-                type: "mrkdwn",
-                text: `*Evaluación:*\n${assessmentTitle}`,
+                text: `*Título:*\n${title}`,
               },
               {
                 type: "mrkdwn",
@@ -68,11 +66,19 @@ serve(async (req) => {
               },
               {
                 type: "mrkdwn",
-                text: `*Puntaje:*\n${scoreDisplay}`,
+                text: `*Idioma:*\n${languageLabel}`,
               },
               {
                 type: "mrkdwn",
-                text: `*Completado:*\n${new Date(completedAt).toLocaleString("es-MX")}`,
+                text: `*Creador:*\n${creatorName || "No registrado"}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Email:*\n${creatorEmail}`,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Empresa:*\n${company || "N/A"}`,
               },
             ],
           },
@@ -88,6 +94,24 @@ serve(async (req) => {
           });
         }
       }
+
+      if (description) {
+        slackMessage.blocks.push({
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: `*Descripción:*\n${description}`,
+          },
+        } as any);
+      }
+
+      slackMessage.blocks.push({
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Link:*\n${shareLink}`,
+        },
+      } as any);
 
       const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
         method: "POST",
@@ -109,14 +133,15 @@ serve(async (req) => {
     // Send Google Sheets notification
     try {
       const sheetsData = {
-        candidateName,
-        candidateEmail,
-        assessmentTitle,
+        title,
         assessmentType: assessmentTypeLabel,
         psychometricType: psychometricType || "N/A",
-        score: scoreDisplay,
-        totalQuestions: totalQuestions.toString(),
-        completedAt: new Date(completedAt).toISOString(),
+        description: description || "N/A",
+        language: languageLabel,
+        creatorEmail,
+        creatorName: creatorName || "No registrado",
+        company: company || "N/A",
+        shareLink,
         timestamp: new Date().toISOString(),
       };
 
@@ -141,7 +166,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error in notify-candidate-completed function:", error);
+    console.error("Error in notify-assessment-created function:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
