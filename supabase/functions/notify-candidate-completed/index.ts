@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL") ?? "";
 const GOOGLE_SHEETS_WEBHOOK_URL =
-  "https://script.google.com/a/macros/lapieza.io/s/AKfycbz4ShXMaJ1Re-d6tWk0ZTkkPxnLLu_hMIYHDXNkUc_eb7AVlZ7nkEEQ-R7GLNCdJQHj/exec";
+  "https://script.google.com/macros/s/AKfycbzalr_bQoCLtqqbCLR84QRB-BXs2gL-tBv_E1EbUgdJkzk7YrBP1xJ96FPrjYv2SiAk/exec";
 
 serve(async (req) => {
   // Handle CORS preflight requests
