@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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";
+const SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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";
 const GOOGLE_SHEETS_WEBHOOK_URL =
   "https://script.google.com/macros/s/AKfycbzalr_bQoCLtqqbCLR84QRB-BXs2gL-tBv_E1EbUgdJkzk7YrBP1xJ96FPrjYv2SiAk/exec";
 
