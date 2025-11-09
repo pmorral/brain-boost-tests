@@ -121,13 +121,29 @@ const TakeAssessment = () => {
             });
 
             // Terminar la evaluación inmediatamente
+            const completedAt = new Date().toISOString();
             await supabase
               .from("candidates")
               .update({
-                completed_at: new Date().toISOString(),
+                completed_at: completedAt,
                 total_score: score,
               })
               .eq("id", candidateId);
+
+            // Send exit notification
+            supabase.functions.invoke('notify-candidate-completed', {
+              body: {
+                candidateName: fullName,
+                candidateEmail: email,
+                assessmentTitle: assessment.title,
+                assessmentType: assessment.assessment_type,
+                psychometricType: assessment.psychometric_type,
+                score: assessment.assessment_type === 'psychometric' ? null : score,
+                totalQuestions: 20,
+                completedAt,
+                reason: 'tab_exit'
+              }
+            }).catch(error => console.error('Error sending exit notification:', error));
 
             setStep("complete");
           }
