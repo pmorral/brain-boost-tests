@@ -10,30 +10,6 @@ const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL") ?? "";
 const GOOGLE_SHEETS_WEBHOOK_URL =
   "https://script.google.com/macros/s/AKfycbzalr_bQoCLtqqbCLR84QRB-BXs2gL-tBv_E1EbUgdJkzk7YrBP1xJ96FPrjYv2SiAk/exec";
 
-// Helper para seguir redirecciones manteniendo POST y body (similar a follow-redirects)
-async function postWithRedirects(url: string, payload: unknown, maxRedirects = 10): Promise<Response> {
-  let currentUrl = url;
-  for (let i = 0; i <= maxRedirects; i++) {
-    const res = await fetch(currentUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "supabase-edge/1.0",
-      },
-      body: JSON.stringify(payload),
-      redirect: "manual",
-    });
-    if (res.status >= 300 && res.status < 400) {
-      const location = res.headers.get("location") || res.headers.get("Location");
-      if (!location) return res;
-      currentUrl = location;
-      continue;
-    }
-    return res;
-  }
-  throw new Error("Too many redirects when posting to Google Sheets");
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -63,75 +39,21 @@ serve(async (req) => {
 
     // Send Slack notification
     try {
-      console.log(SLACK_WEBHOOK_URL);
+      console.log("Slack webhook URL:", SLACK_WEBHOOK_URL ? "configured" : "not configured");
       if (!SLACK_WEBHOOK_URL) {
         console.error("SLACK_WEBHOOK_URL secret is not set");
-        // Continuar sin Slack, pero no interrumpir el flujo
         throw new Error("Missing SLACK_WEBHOOK_URL");
       }
-      const fields = [
-        {
-          type: "mrkdwn",
-          text: `*Candidato:*\n${candidateName}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Email:*\n${candidateEmail}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Evaluación:*\n${assessmentTitle}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Tipo:*\n${assessmentTypeLabel}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*Puntaje:*\n${scoreDisplay}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*${isExit ? "Finalizado" : "Completado"}:*\n${new Date(completedAt).toLocaleString("es-MX")}`,
-        },
-      ] as any[];
 
-      if (isExit) {
-        fields.push({
-          type: "mrkdwn",
-          text: `*Motivo:*\nSalida de pestaña`,
-        });
-      }
+      const slackText = isExit
+        ? `⚠️ *Evaluación Finalizada por Salida*\n\n*Candidato:* ${candidateName}\n*Email:* ${candidateEmail}\n*Evaluación:* ${assessmentTitle}\n*Tipo:* ${assessmentTypeLabel}\n*Puntaje:* ${scoreDisplay}\n*Finalizado:* ${new Date(completedAt).toLocaleString("es-MX")}\n*Motivo:* Salida de pestaña${psychometricType ? `\n*Test Psicométrico:* ${psychometricType}` : ""}`
+        : `✅ *Candidato Completó Evaluación*\n\n*Candidato:* ${candidateName}\n*Email:* ${candidateEmail}\n*Evaluación:* ${assessmentTitle}\n*Tipo:* ${assessmentTypeLabel}\n*Puntaje:* ${scoreDisplay}\n*Completado:* ${new Date(completedAt).toLocaleString("es-MX")}${psychometricType ? `\n*Test Psicométrico:* ${psychometricType}` : ""}`;
 
       const slackMessage = {
-        text: isExit ? "⚠️ Evaluación Finalizada por Salida" : "✅ Candidato Completó Evaluación",
-        blocks: [
-          {
-            type: "header",
-            text: {
-              type: "plain_text",
-              text: isExit ? "⚠️ Evaluación Finalizada por Salida" : "✅ Candidato Completó Evaluación",
-              emoji: true,
-            },
-          },
-          {
-            type: "section",
-            fields,
-          },
-        ],
-      } as any;
+        text: slackText,
+      };
 
-      if (psychometricType) {
-        const fieldsBlock = slackMessage.blocks[1];
-        if (fieldsBlock && "fields" in fieldsBlock && (fieldsBlock as any).fields) {
-          (fieldsBlock as any).fields.push({
-            type: "mrkdwn",
-            text: `*Test Psicométrico:*\n${psychometricType}`,
-          });
-        }
-      }
-
-      console.log("slackMessage", slackMessage);
+      console.log("Sending Slack message:", slackMessage);
 
       const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
         method: "POST",
@@ -142,7 +64,8 @@ serve(async (req) => {
       });
 
       if (!slackResponse.ok) {
-        console.error("Error sending Slack notification:", await slackResponse.text());
+        const errorText = await slackResponse.text();
+        console.error("Error sending Slack notification:", errorText);
       } else {
         console.log("Slack notification sent successfully");
       }
@@ -161,18 +84,25 @@ serve(async (req) => {
         score: scoreDisplay,
         totalQuestions: totalQuestions.toString(),
         completedAt: new Date(completedAt).toISOString(),
-        timestamp: new Date().toISOString(),
         status: isExit ? "Exited" : "Completed",
         reason: isExit ? "tab_exit" : "completed",
       };
-      console.log("sheetsData", sheetsData);
+      console.log("Sending to Google Sheets:", sheetsData);
 
-      const sheetsResponse = await postWithRedirects(GOOGLE_SHEETS_WEBHOOK_URL, sheetsData, 10);
+      const sheetsResponse = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(sheetsData),
+      });
 
       if (!sheetsResponse.ok) {
-        console.error("Error sending to Google Sheets:", await sheetsResponse.text());
+        const errorText = await sheetsResponse.text();
+        console.error("Error sending to Google Sheets:", errorText);
       } else {
-        console.log("Google Sheets notification sent successfully");
+        const responseData = await sheetsResponse.text();
+        console.log("Google Sheets notification sent successfully:", responseData);
       }
     } catch (sheetsError) {
       console.error("Error with Google Sheets:", sheetsError);
