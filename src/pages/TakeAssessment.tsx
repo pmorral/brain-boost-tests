@@ -24,7 +24,6 @@ const TakeAssessment = () => {
   const [responses, setResponses] = useState<string[]>([]);
   const [score, setScore] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [shuffledOptionsMap, setShuffledOptionsMap] = useState<Record<number, Record<string, string>>>({});
   const isCompletedRef = useRef(false);
 
   useEffect(() => {
@@ -217,21 +216,6 @@ const TakeAssessment = () => {
     const selectedQuestions = shuffled.slice(0, 20);
     const questionIds = selectedQuestions.map(q => q.id);
 
-    // Create shuffled options map for each question
-    const optionsMap: Record<number, Record<string, string>> = {};
-    selectedQuestions.forEach((q, index) => {
-      const isLikert = q.correct_answer === 'LIKERT';
-      const originalLetters = isLikert ? ['A', 'B', 'C', 'D', 'E'] : ['A', 'B', 'C', 'D'];
-      const shuffledLetters = [...originalLetters].sort(() => Math.random() - 0.5);
-      
-      // Map: original letter -> display letter
-      const mapping: Record<string, string> = {};
-      originalLetters.forEach((original, idx) => {
-        mapping[original] = shuffledLetters[idx];
-      });
-      optionsMap[index] = mapping;
-    });
-
     const { data, error } = await supabase
       .from("candidates")
       .insert([{ 
@@ -249,7 +233,6 @@ const TakeAssessment = () => {
     } else {
       setCandidateId(data.id);
       setQuestions(selectedQuestions);
-      setShuffledOptionsMap(optionsMap);
       setStep("test");
     }
   };
@@ -268,21 +251,13 @@ const TakeAssessment = () => {
     const question = questions[currentQuestion];
     const isLikert = question.correct_answer === 'LIKERT';
     
-    // Get the shuffled options for this question
-    const shuffledOptions = shuffledOptionsMap[currentQuestion];
-    
-    // Find which original option letter the user selected
-    const selectedOriginalLetter = Object.entries(shuffledOptions || {}).find(
-      ([_, displayLetter]) => displayLetter === answer
-    )?.[0];
-    
-    // Compare with the original correct answer
-    const isCorrect = isLikert ? null : selectedOriginalLetter === question.correct_answer;
+    // Compare selected answer directly with correct answer
+    const isCorrect = isLikert ? null : answer === question.correct_answer;
     
     await supabase.from("candidate_responses").insert([{
       candidate_id: candidateId,
       question_id: question.id,
-      selected_answer: selectedOriginalLetter || "A",
+      selected_answer: answer,
       is_correct: isCorrect !== null ? isCorrect : false,
       time_taken_seconds: 40 - timeLeft,
     }] as any);
@@ -450,31 +425,20 @@ const TakeAssessment = () => {
                 const question = questions[currentQuestion];
                 const isLikert = question?.correct_answer === 'LIKERT';
                 const displayLetters = isLikert ? ["A", "B", "C", "D", "E"] : ["A", "B", "C", "D"];
-                const shuffleMap = shuffledOptionsMap[currentQuestion] || {};
                 
-                // Create reverse map: display letter -> original letter
-                const reverseMap: Record<string, string> = {};
-                Object.entries(shuffleMap).forEach(([original, display]) => {
-                  reverseMap[display] = original;
-                });
-                
-                // Sort display letters to show A, B, C, D (E) in order
-                const sortedDisplayLetters = [...displayLetters].sort();
-                
-                return sortedDisplayLetters.map((displayLetter) => {
-                  const originalLetter = reverseMap[displayLetter] || displayLetter;
-                  const optionText = question?.[`option_${originalLetter.toLowerCase()}`];
+                return displayLetters.map((letter) => {
+                  const optionText = question?.[`option_${letter.toLowerCase()}`];
                   
                   return (
                     <div
-                      key={`q${currentQuestion}-opt${displayLetter}`}
+                      key={`q${currentQuestion}-opt${letter}`}
                       className="w-full border border-input rounded-md p-4 cursor-pointer hover:border-foreground/30 transition-colors bg-background select-none"
-                      onClick={() => handleAnswer(displayLetter)}
+                      onClick={() => handleAnswer(letter)}
                       onTouchStart={(e) => e.currentTarget.style.borderColor = 'hsl(var(--foreground) / 0.3)'}
                       onTouchEnd={(e) => e.currentTarget.style.borderColor = ''}
                     >
                       <div className="flex items-start gap-3 w-full pointer-events-none">
-                        <span className="font-bold flex-shrink-0">{displayLetter}.</span>
+                        <span className="font-bold flex-shrink-0">{letter}.</span>
                         <span className="flex-1 break-words">{optionText}</span>
                       </div>
                     </div>
