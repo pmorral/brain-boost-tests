@@ -37,12 +37,24 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Auto-refresh to check for completed question generation
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      loadAssessments(user.id, user.email!);
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const loadAssessments = async (userId: string, userEmail: string) => {
     const { data, error } = await supabase
       .from("assessments")
       .select(`
         *,
-        candidates(count)
+        candidates(count),
+        assessment_questions(count)
       `)
       .or(`recruiter_id.eq.${userId},creator_email.eq.${userEmail}`)
       .order("created_at", { ascending: false });
@@ -169,37 +181,51 @@ const Dashboard = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                 {assessments.map((assessment) => (
-                  <Card key={assessment.id} className="cursor-pointer hover:border-primary transition-colors"
-                    onClick={() => navigate(`/assessment/${assessment.id}`)}>
-                    <CardContent className="pt-6">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg">{assessment.title}</h3>
-                            {!assessment.recruiter_id && assessment.claimed && (
-                              <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded">Reclamada</span>
-                            )}
+                 {assessments.map((assessment) => {
+                  const hasQuestions = assessment.assessment_questions?.[0]?.count > 0;
+                  const isGenerating = !hasQuestions;
+                  
+                  return (
+                    <Card 
+                      key={assessment.id} 
+                      className={`cursor-pointer transition-colors ${isGenerating ? 'opacity-60' : 'hover:border-primary'}`}
+                      onClick={() => !isGenerating && navigate(`/assessment/${assessment.id}`)}
+                    >
+                      <CardContent className="pt-6">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-lg">{assessment.title}</h3>
+                              {isGenerating && (
+                                <span className="text-xs bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded animate-pulse flex items-center gap-1">
+                                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-600 dark:bg-amber-400 animate-pulse"></span>
+                                  Generando preguntas...
+                                </span>
+                              )}
+                              {!assessment.recruiter_id && assessment.claimed && (
+                                <span className="text-xs bg-secondary/20 text-secondary px-2 py-1 rounded">Reclamada</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {assessment.description || "Sin descripción"}
+                            </p>
+                            <div className="flex gap-2 mt-2">
+                              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                                {assessment.assessment_type.replace('_', ' ')}
+                              </span>
+                              <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                                {assessment.candidates?.[0]?.count || 0} candidatos
+                              </span>
+                            </div>
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {assessment.description || "Sin descripción"}
-                          </p>
-                          <div className="flex gap-2 mt-2">
-                            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                              {assessment.assessment_type.replace('_', ' ')}
-                            </span>
-                            <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                              {assessment.candidates?.[0]?.count || 0} candidatos
-                            </span>
-                          </div>
+                          <Button variant="outline" size="sm" disabled={isGenerating}>
+                            {isGenerating ? 'Procesando...' : 'Ver Detalles'}
+                          </Button>
                         </div>
-                        <Button variant="outline" size="sm">
-                          Ver Detalles
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </CardContent>
