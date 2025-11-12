@@ -302,82 +302,159 @@ Devuelve SOLAMENTE un array JSON de 50 preguntas. ${languageInstruction}`;
       }
     }
 
-    // Call Lovable AI
-    console.log('Calling Lovable AI...');
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-      }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', aiResponse.status, errorText);
-      throw new Error(`AI API error: ${aiResponse.status}`);
-    }
-
-    const aiData = await aiResponse.json();
-    const content = aiData.choices[0].message.content;
-    console.log('AI response received');
-
-    // Parse the JSON response
-    let questions;
-    try {
-      // Remove markdown code blocks if present
-      const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
-      questions = JSON.parse(cleanContent);
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', content.substring(0, 500));
-      throw new Error('Failed to parse AI-generated questions');
-    }
-
-    if (!Array.isArray(questions)) {
-      console.error('AI response is not an array:', typeof questions);
-      throw new Error('AI response is not a valid array of questions');
-    }
-
-    console.log(`AI returned ${questions.length} questions`);
-
-    // Handle cases where AI doesn't return exactly 50 questions
-    if (questions.length < 40) {
-      console.error(`AI returned too few questions: ${questions.length}`);
-      throw new Error(`AI returned only ${questions.length} questions. Minimum required is 40.`);
-    }
-
-    if (questions.length < 50) {
-      console.log(`AI returned ${questions.length} questions, adjusting to 50...`);
-      // Duplicate random questions to reach 50
-      while (questions.length < 50) {
-        const randomIndex = Math.floor(Math.random() * questions.length);
-        questions.push({ ...questions[randomIndex] });
+    // Function to validate answer distribution
+    const validateDistribution = (qs: any[]): { valid: boolean; distribution: Record<string, number> } => {
+      const hasCorrectAnswers = qs.some(q => q.correct && q.correct !== 'LIKERT');
+      
+      if (!hasCorrectAnswers) {
+        // Likert scale questions don't need distribution validation
+        return { valid: true, distribution: {} };
       }
-    } else if (questions.length > 50) {
-      console.log(`AI returned ${questions.length} questions, trimming to 50...`);
-      // Take only the first 50 questions
-      questions = questions.slice(0, 50);
-    }
 
-    // Log correct answer distribution for monitoring (for non-Likert questions)
-    const hasCorrectAnswers = questions.some(q => q.correct && q.correct !== 'LIKERT');
-    if (hasCorrectAnswers) {
-      const distribution = { A: 0, B: 0, C: 0, D: 0 };
-      questions.forEach(q => {
+      const distribution: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+      qs.forEach(q => {
         if (q.correct && q.correct !== 'LIKERT') {
-          distribution[q.correct as keyof typeof distribution] = (distribution[q.correct as keyof typeof distribution] || 0) + 1;
+          distribution[q.correct] = (distribution[q.correct] || 0) + 1;
         }
       });
+
+      // Check if any single letter exceeds 30% (15 out of 50 questions)
+      const totalQuestions = qs.length;
+      const maxAllowedPercentage = 30;
       
-      console.log('Correct answer distribution:', distribution);
+      for (const [letter, count] of Object.entries(distribution)) {
+        const percentage = (count / totalQuestions) * 100;
+        if (percentage > maxAllowedPercentage) {
+          console.log(`Distribution validation failed: ${letter} appears in ${percentage.toFixed(1)}% of questions (${count}/${totalQuestions})`);
+          return { valid: false, distribution };
+        }
+      }
+
+      return { valid: true, distribution };
+    };
+
+    // Retry system with model escalation
+    let attempts = 0;
+    const maxAttempts = 3;
+    let questions: any[] | null = null;
+    let model = 'google/gemini-2.5-flash';
+    let finalDistribution: Record<string, number> = {};
+
+    while (attempts < maxAttempts && !questions) {
+      attempts++;
+      
+      // Switch to more powerful model on third attempt
+      if (attempts === 3) {
+        model = 'google/gemini-2.5-pro';
+        console.log(`⚡ Attempt ${attempts}/3: Switching to ${model} for better instruction following...`);
+      } else {
+        console.log(`🔄 Attempt ${attempts}/3: Generating questions with ${model}...`);
+      }
+
+      try {
+        // Call Lovable AI
+        const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.7,
+          }),
+        });
+
+        if (!aiResponse.ok) {
+          const errorText = await aiResponse.text();
+          console.error('AI API error:', aiResponse.status, errorText);
+          throw new Error(`AI API error: ${aiResponse.status}`);
+        }
+
+        const aiData = await aiResponse.json();
+        const content = aiData.choices[0].message.content;
+        console.log('AI response received');
+
+        // Parse the JSON response
+        let parsedQuestions;
+        try {
+          // Remove markdown code blocks if present
+          const cleanContent = content.replace(/```json\n?|\n?```/g, '').trim();
+          parsedQuestions = JSON.parse(cleanContent);
+        } catch (parseError) {
+          console.error('Failed to parse AI response:', content.substring(0, 500));
+          throw new Error('Failed to parse AI-generated questions');
+        }
+
+        if (!Array.isArray(parsedQuestions)) {
+          console.error('AI response is not an array:', typeof parsedQuestions);
+          throw new Error('AI response is not a valid array of questions');
+        }
+
+        console.log(`AI returned ${parsedQuestions.length} questions`);
+
+        // Handle cases where AI doesn't return exactly 50 questions
+        if (parsedQuestions.length < 40) {
+          console.error(`AI returned too few questions: ${parsedQuestions.length}`);
+          throw new Error(`AI returned only ${parsedQuestions.length} questions. Minimum required is 40.`);
+        }
+
+        if (parsedQuestions.length < 50) {
+          console.log(`AI returned ${parsedQuestions.length} questions, adjusting to 50...`);
+          // Duplicate random questions to reach 50
+          while (parsedQuestions.length < 50) {
+            const randomIndex = Math.floor(Math.random() * parsedQuestions.length);
+            parsedQuestions.push({ ...parsedQuestions[randomIndex] });
+          }
+        } else if (parsedQuestions.length > 50) {
+          console.log(`AI returned ${parsedQuestions.length} questions, trimming to 50...`);
+          // Take only the first 50 questions
+          parsedQuestions = parsedQuestions.slice(0, 50);
+        }
+
+        // Validate distribution
+        const { valid, distribution } = validateDistribution(parsedQuestions);
+        finalDistribution = distribution;
+
+        if (valid) {
+          questions = parsedQuestions;
+          console.log(`✅ Attempt ${attempts} succeeded! Correct answer distribution:`, distribution);
+        } else {
+          console.log(`❌ Attempt ${attempts} failed validation - distribution is skewed:`, distribution);
+          
+          if (attempts === maxAttempts) {
+            throw new Error(`Failed to generate questions with balanced distribution after ${maxAttempts} attempts. Final distribution: ${JSON.stringify(distribution)}`);
+          }
+          
+          // Continue to next iteration
+          continue;
+        }
+
+      } catch (error) {
+        console.error(`Error in attempt ${attempts}:`, error);
+        
+        // If this is the last attempt, throw the error
+        if (attempts === maxAttempts) {
+          throw error;
+        }
+        
+        // Otherwise, continue to next iteration
+        continue;
+      }
+    }
+
+    // At this point, questions should be set (or we would have thrown an error)
+    if (!questions) {
+      throw new Error('Failed to generate questions - unexpected error');
+    }
+
+    // Log final distribution
+    if (Object.keys(finalDistribution).length > 0) {
+      console.log('Final correct answer distribution:', finalDistribution);
     }
 
     // Insert questions into database
