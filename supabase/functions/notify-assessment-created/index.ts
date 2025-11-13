@@ -15,6 +15,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  console.log(SLACK_WEBHOOK_URL);
 
   try {
     const {
