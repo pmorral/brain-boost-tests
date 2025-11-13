@@ -130,21 +130,6 @@ const TakeAssessment = () => {
               })
               .eq("id", candidateId);
 
-            // Send exit notification
-            supabase.functions.invoke('notify-candidate-completed', {
-              body: {
-                candidateName: fullName,
-                candidateEmail: email,
-                assessmentTitle: assessment.title,
-                assessmentType: assessment.assessment_type,
-                psychometricType: assessment.psychometric_type,
-                score: assessment.assessment_type === 'psychometric' ? null : score,
-                totalQuestions: 20,
-                completedAt,
-                reason: 'tab_exit'
-              }
-            }).catch(error => console.error('Error sending exit notification:', error));
-
             setStep("complete");
           }
         }, 3000);
@@ -283,20 +268,6 @@ const TakeAssessment = () => {
       
       // Now show complete screen
       setStep("complete");
-      
-      // Send notifications in background
-      supabase.functions.invoke('notify-candidate-completed', {
-        body: {
-          candidateName: fullName,
-          candidateEmail: email,
-          assessmentTitle: assessment.title,
-          assessmentType: assessment.assessment_type,
-          psychometricType: assessment.psychometric_type,
-          score: finalScore,
-          totalQuestions: 20,
-          completedAt
-        }
-      }).catch(error => console.error('Error sending completion notifications:', error));
       
       // If it's a Likert assessment, trigger AI analysis in background
       if (isLikert) {
