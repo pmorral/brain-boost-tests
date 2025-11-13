@@ -114,7 +114,7 @@ serve(async (req) => {
         },
       } as any);
 
-      console.log("Sending Slack message:", slackMessage);
+      console.log("Sending to Slack:", JSON.stringify(slackMessage));
 
       const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
         method: "POST",
@@ -124,9 +124,12 @@ serve(async (req) => {
         body: JSON.stringify(slackMessage),
       });
 
+      const slackResponseText = await slackResponse.text();
+      console.log("Slack response status:", slackResponse.status);
+      console.log("Slack response:", slackResponseText);
+
       if (!slackResponse.ok) {
-        const errorText = await slackResponse.text();
-        console.error("Error sending Slack notification:", errorText);
+        console.error("Error sending Slack notification:", slackResponseText);
       } else {
         console.log("Slack notification sent successfully");
       }
