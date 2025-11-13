@@ -139,15 +139,16 @@ serve(async (req) => {
       const sheetsData = {
         title,
         assessmentType: assessmentTypeLabel,
-        psychometricType: psychometricType || "N/A",
+        psychometricType: psychometricType || null,
         description: description || "N/A",
         language: languageLabel,
         creatorEmail,
         creatorName: creatorName || "No registrado",
         company: company || "N/A",
         shareLink,
-        timestamp: new Date().toISOString(),
       };
+
+      console.log("Sending to Google Sheets:", JSON.stringify(sheetsData));
 
       const sheetsResponse = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
         method: "POST",
@@ -157,8 +158,12 @@ serve(async (req) => {
         body: JSON.stringify(sheetsData),
       });
 
+      const responseText = await sheetsResponse.text();
+      console.log("Google Sheets response status:", sheetsResponse.status);
+      console.log("Google Sheets response:", responseText);
+
       if (!sheetsResponse.ok) {
-        console.error("Error sending to Google Sheets:", await sheetsResponse.text());
+        console.error("Error sending to Google Sheets:", responseText);
       } else {
         console.log("Google Sheets notification sent successfully");
       }
