@@ -143,90 +143,124 @@ const AssessmentDetails = () => {
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 14;
-    let yPosition = 20;
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+    let yPosition = 25;
+
+    // Helper function to check if we need a new page
+    function checkPageBreak(currentY: number, neededSpace: number) {
+      if (currentY + neededSpace > pageHeight - margin) {
+        doc.addPage();
+        return 25;
+      }
+      return currentY;
+    }
+
+    // Helper function to add wrapped text
+    function addText(text: string, x: number, y: number, maxWidth: number, fontSize: number = 10, isBold: boolean = false) {
+      doc.setFontSize(fontSize);
+      doc.setFont("helvetica", isBold ? "bold" : "normal");
+      const splitText = doc.splitTextToSize(text, maxWidth);
+      let currentY = y;
+      
+      splitText.forEach((line: string) => {
+        currentY = checkPageBreak(currentY, 7);
+        doc.text(line, x, currentY);
+        currentY += 5;
+      });
+      
+      return currentY;
+    }
 
     // Title
-    doc.setFontSize(18);
+    doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text("Reporte de Evaluación - Puntú.ai", pageWidth / 2, yPosition, { align: "center" });
-    
+    doc.text("Reporte de Evaluación", pageWidth / 2, yPosition, { align: "center" });
+    yPosition += 8;
+    doc.setFontSize(14);
+    doc.text("Puntú.ai", pageWidth / 2, yPosition, { align: "center" });
     yPosition += 15;
     
     // Assessment Info
-    doc.setFontSize(12);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Información de la Evaluación", margin, yPosition);
-    yPosition += 7;
+    yPosition += 8;
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Título: ${assessment.title}`, margin, yPosition);
-    yPosition += 5;
-    doc.text(`Tipo: ${assessment.assessment_type.replace('_', ' ')}`, margin, yPosition);
-    yPosition += 5;
+    yPosition = addText(`Título: ${assessment.title}`, margin, yPosition, contentWidth);
+    yPosition = addText(`Tipo: ${assessment.assessment_type.replace('_', ' ')}`, margin, yPosition, contentWidth);
     
     if (assessment.custom_topic) {
-      doc.text(`Tema: ${assessment.custom_topic}`, margin, yPosition);
-      yPosition += 5;
+      yPosition = addText(`Tema: ${assessment.custom_topic}`, margin, yPosition, contentWidth);
     }
     
     if (assessment.psychometric_type) {
-      doc.text(`Test Psicométrico: ${assessment.psychometric_type.toUpperCase()}`, margin, yPosition);
-      yPosition += 5;
+      yPosition = addText(`Test Psicométrico: ${assessment.psychometric_type.toUpperCase()}`, margin, yPosition, contentWidth);
     }
     
-    yPosition += 5;
+    yPosition += 8;
     
     // Candidate Info
-    doc.setFontSize(12);
+    yPosition = checkPageBreak(yPosition, 35);
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
     doc.text("Información del Candidato", margin, yPosition);
-    yPosition += 7;
+    yPosition += 8;
     
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.text(`Nombre: ${candidate.full_name}`, margin, yPosition);
-    yPosition += 5;
-    doc.text(`Email: ${candidate.email}`, margin, yPosition);
-    yPosition += 5;
-    doc.text(`Fecha de inicio: ${new Date(candidate.started_at).toLocaleString()}`, margin, yPosition);
-    yPosition += 5;
+    yPosition = addText(`Nombre: ${candidate.full_name}`, margin, yPosition, contentWidth);
+    yPosition = addText(`Email: ${candidate.email}`, margin, yPosition, contentWidth);
+    yPosition = addText(`Fecha de inicio: ${new Date(candidate.started_at).toLocaleString('es-ES', { 
+      dateStyle: 'short', 
+      timeStyle: 'short' 
+    })}`, margin, yPosition, contentWidth);
     
     if (candidate.completed_at) {
-      doc.text(`Fecha de finalización: ${new Date(candidate.completed_at).toLocaleString()}`, margin, yPosition);
-      yPosition += 5;
+      yPosition = addText(`Fecha de finalización: ${new Date(candidate.completed_at).toLocaleString('es-ES', { 
+        dateStyle: 'short', 
+        timeStyle: 'short' 
+      })}`, margin, yPosition, contentWidth);
     }
+    
+    yPosition += 3;
     
     // Score
     if (candidate.total_score !== null) {
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text(`Puntaje: ${candidate.total_score}/20 (${Math.round(((candidate.total_score || 0) / 20) * 100)}%)`, margin, yPosition);
-      yPosition += 10;
+      yPosition += 12;
     } else {
-      yPosition += 5;
+      yPosition += 8;
     }
 
     // Psychometric Analysis
     if (candidate.psychometric_analysis) {
-      yPosition = checkPageBreak(doc, yPosition, 40);
+      yPosition = checkPageBreak(yPosition, 50);
       
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Análisis Psicométrico por IA", margin, yPosition);
-      yPosition += 7;
+      yPosition += 8;
       
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
       
       const analysisText = candidate.psychometric_analysis.replace(/\*\*/g, '');
-      const splitAnalysis = doc.splitTextToSize(analysisText, pageWidth - (margin * 2));
+      const paragraphs = analysisText.split('\n\n');
       
-      splitAnalysis.forEach((line: string) => {
-        yPosition = checkPageBreak(doc, yPosition, 7);
-        doc.text(line, margin, yPosition);
-        yPosition += 5;
+      paragraphs.forEach((paragraph: string) => {
+        const splitParagraph = doc.splitTextToSize(paragraph.trim(), contentWidth);
+        splitParagraph.forEach((line: string) => {
+          yPosition = checkPageBreak(yPosition, 7);
+          doc.text(line, margin, yPosition);
+          yPosition += 4.5;
+        });
+        yPosition += 3;
       });
       
       yPosition += 5;
@@ -234,9 +268,9 @@ const AssessmentDetails = () => {
 
     // Questions and Answers
     if (details.length > 0) {
-      yPosition = checkPageBreak(doc, yPosition, 15);
+      yPosition = checkPageBreak(yPosition, 20);
       
-      doc.setFontSize(12);
+      doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
       doc.text("Respuestas Detalladas", margin, yPosition);
       yPosition += 10;
@@ -245,68 +279,73 @@ const AssessmentDetails = () => {
         const question = response.assessment_questions;
         const isLikert = question.correct_answer === 'LIKERT';
         
-        yPosition = checkPageBreak(doc, yPosition, 35);
+        yPosition = checkPageBreak(yPosition, 40);
         
         // Question
-        doc.setFontSize(10);
+        doc.setFontSize(11);
         doc.setFont("helvetica", "bold");
         const questionText = `${index + 1}. ${question.question_text}`;
-        const splitQuestion = doc.splitTextToSize(questionText, pageWidth - (margin * 2));
+        const splitQuestion = doc.splitTextToSize(questionText, contentWidth);
         
         splitQuestion.forEach((line: string) => {
-          yPosition = checkPageBreak(doc, yPosition, 7);
+          yPosition = checkPageBreak(yPosition, 7);
           doc.text(line, margin, yPosition);
-          yPosition += 5;
+          yPosition += 5.5;
         });
         
-        yPosition += 2;
+        yPosition += 3;
         
         // Options and answer
         doc.setFontSize(9);
-        doc.setFont("helvetica", "normal");
         
         const options = isLikert 
           ? { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d, E: question.option_e }
           : { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d };
         
         Object.entries(options).forEach(([key, value]) => {
-          yPosition = checkPageBreak(doc, yPosition, 7);
+          yPosition = checkPageBreak(yPosition, 12);
           
           const isSelected = response.selected_answer === key;
           const isCorrect = question.correct_answer === key;
           
-          if (isSelected) {
-            doc.setFont("helvetica", "bold");
-          } else {
-            doc.setFont("helvetica", "normal");
-          }
+          doc.setFont("helvetica", isSelected ? "bold" : "normal");
           
-          let optionText = `   ${key}) ${value}`;
+          let optionPrefix = `     ${key}) `;
+          let optionText = value as string;
+          let optionSuffix = '';
+          
           if (isSelected && !isLikert) {
-            optionText += response.is_correct ? ' ✓ (Correcta)' : ' ✗ (Incorrecta)';
+            optionSuffix = response.is_correct ? ' ✓ (Correcta)' : ' ✗ (Incorrecta)';
           } else if (isCorrect && !isSelected && !isLikert) {
-            optionText += ' (Respuesta correcta)';
+            optionSuffix = ' (Respuesta correcta)';
           }
           
-          const splitOption = doc.splitTextToSize(optionText, pageWidth - (margin * 2) - 5);
-          splitOption.forEach((line: string) => {
-            yPosition = checkPageBreak(doc, yPosition, 7);
-            doc.text(line, margin + 3, yPosition);
-            yPosition += 4.5;
-          });
+          // Split the option text to fit within margins
+          const optionWidth = contentWidth - 15;
+          const splitOption = doc.splitTextToSize(optionText, optionWidth);
+          
+          // First line with prefix
+          doc.text(optionPrefix + splitOption[0], margin, yPosition);
+          yPosition += 5;
+          
+          // Remaining lines indented
+          for (let i = 1; i < splitOption.length; i++) {
+            yPosition = checkPageBreak(yPosition, 7);
+            doc.text(splitOption[i], margin + 15, yPosition);
+            yPosition += 5;
+          }
+          
+          // Add suffix if exists
+          if (optionSuffix) {
+            yPosition = checkPageBreak(yPosition, 7);
+            doc.setFont("helvetica", "italic");
+            doc.text(optionSuffix, margin + 15, yPosition);
+            yPosition += 5;
+          }
         });
         
         yPosition += 7;
       });
-    }
-
-    // Helper function to check if we need a new page
-    function checkPageBreak(doc: jsPDF, currentY: number, neededSpace: number) {
-      if (currentY + neededSpace > doc.internal.pageSize.getHeight() - 20) {
-        doc.addPage();
-        return 20;
-      }
-      return currentY;
     }
 
     // Save PDF
