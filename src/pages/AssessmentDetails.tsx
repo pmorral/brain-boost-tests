@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, ExternalLink, Loader2, Users, Award, ChevronDown, ChevronUp, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, Users, Award, ChevronDown, ChevronUp, CheckCircle2, XCircle, Download } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AssessmentDetails = () => {
   const { id } = useParams();
@@ -116,6 +118,205 @@ const AssessmentDetails = () => {
     } else {
       setCandidates(data || []);
     }
+  };
+
+  const downloadCandidatePDF = async (candidate: any) => {
+    toast({
+      title: "Generando PDF",
+      description: "Por favor espera...",
+    });
+
+    // Load candidate details if not already loaded
+    let details = candidateDetails[candidate.id];
+    if (!details) {
+      const { data } = await supabase
+        .from("candidate_responses")
+        .select(`
+          *,
+          assessment_questions(*)
+        `)
+        .eq("candidate_id", candidate.id)
+        .order("answered_at", { ascending: true });
+      
+      details = data || [];
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 14;
+    let yPosition = 20;
+
+    // Title
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text("Reporte de Evaluación - Puntú.ai", pageWidth / 2, yPosition, { align: "center" });
+    
+    yPosition += 15;
+    
+    // Assessment Info
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Información de la Evaluación", margin, yPosition);
+    yPosition += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Título: ${assessment.title}`, margin, yPosition);
+    yPosition += 5;
+    doc.text(`Tipo: ${assessment.assessment_type.replace('_', ' ')}`, margin, yPosition);
+    yPosition += 5;
+    
+    if (assessment.custom_topic) {
+      doc.text(`Tema: ${assessment.custom_topic}`, margin, yPosition);
+      yPosition += 5;
+    }
+    
+    if (assessment.psychometric_type) {
+      doc.text(`Test Psicométrico: ${assessment.psychometric_type.toUpperCase()}`, margin, yPosition);
+      yPosition += 5;
+    }
+    
+    yPosition += 5;
+    
+    // Candidate Info
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Información del Candidato", margin, yPosition);
+    yPosition += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Nombre: ${candidate.full_name}`, margin, yPosition);
+    yPosition += 5;
+    doc.text(`Email: ${candidate.email}`, margin, yPosition);
+    yPosition += 5;
+    doc.text(`Fecha de inicio: ${new Date(candidate.started_at).toLocaleString()}`, margin, yPosition);
+    yPosition += 5;
+    
+    if (candidate.completed_at) {
+      doc.text(`Fecha de finalización: ${new Date(candidate.completed_at).toLocaleString()}`, margin, yPosition);
+      yPosition += 5;
+    }
+    
+    // Score
+    if (candidate.total_score !== null) {
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Puntaje: ${candidate.total_score}/20 (${Math.round(((candidate.total_score || 0) / 20) * 100)}%)`, margin, yPosition);
+      yPosition += 10;
+    } else {
+      yPosition += 5;
+    }
+
+    // Psychometric Analysis
+    if (candidate.psychometric_analysis) {
+      yPosition = checkPageBreak(doc, yPosition, 40);
+      
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Análisis Psicométrico por IA", margin, yPosition);
+      yPosition += 7;
+      
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      
+      const analysisText = candidate.psychometric_analysis.replace(/\*\*/g, '');
+      const splitAnalysis = doc.splitTextToSize(analysisText, pageWidth - (margin * 2));
+      
+      splitAnalysis.forEach((line: string) => {
+        yPosition = checkPageBreak(doc, yPosition, 7);
+        doc.text(line, margin, yPosition);
+        yPosition += 5;
+      });
+      
+      yPosition += 5;
+    }
+
+    // Questions and Answers
+    if (details.length > 0) {
+      yPosition = checkPageBreak(doc, yPosition, 15);
+      
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Respuestas Detalladas", margin, yPosition);
+      yPosition += 10;
+
+      details.forEach((response: any, index: number) => {
+        const question = response.assessment_questions;
+        const isLikert = question.correct_answer === 'LIKERT';
+        
+        yPosition = checkPageBreak(doc, yPosition, 35);
+        
+        // Question
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        const questionText = `${index + 1}. ${question.question_text}`;
+        const splitQuestion = doc.splitTextToSize(questionText, pageWidth - (margin * 2));
+        
+        splitQuestion.forEach((line: string) => {
+          yPosition = checkPageBreak(doc, yPosition, 7);
+          doc.text(line, margin, yPosition);
+          yPosition += 5;
+        });
+        
+        yPosition += 2;
+        
+        // Options and answer
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        
+        const options = isLikert 
+          ? { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d, E: question.option_e }
+          : { A: question.option_a, B: question.option_b, C: question.option_c, D: question.option_d };
+        
+        Object.entries(options).forEach(([key, value]) => {
+          yPosition = checkPageBreak(doc, yPosition, 7);
+          
+          const isSelected = response.selected_answer === key;
+          const isCorrect = question.correct_answer === key;
+          
+          if (isSelected) {
+            doc.setFont("helvetica", "bold");
+          } else {
+            doc.setFont("helvetica", "normal");
+          }
+          
+          let optionText = `   ${key}) ${value}`;
+          if (isSelected && !isLikert) {
+            optionText += response.is_correct ? ' ✓ (Correcta)' : ' ✗ (Incorrecta)';
+          } else if (isCorrect && !isSelected && !isLikert) {
+            optionText += ' (Respuesta correcta)';
+          }
+          
+          const splitOption = doc.splitTextToSize(optionText, pageWidth - (margin * 2) - 5);
+          splitOption.forEach((line: string) => {
+            yPosition = checkPageBreak(doc, yPosition, 7);
+            doc.text(line, margin + 3, yPosition);
+            yPosition += 4.5;
+          });
+        });
+        
+        yPosition += 7;
+      });
+    }
+
+    // Helper function to check if we need a new page
+    function checkPageBreak(doc: jsPDF, currentY: number, neededSpace: number) {
+      if (currentY + neededSpace > doc.internal.pageSize.getHeight() - 20) {
+        doc.addPage();
+        return 20;
+      }
+      return currentY;
+    }
+
+    // Save PDF
+    const fileName = `${candidate.full_name.replace(/\s+/g, '_')}_${assessment.title.replace(/\s+/g, '_')}.pdf`;
+    doc.save(fileName);
+
+    toast({
+      title: "PDF generado",
+      description: "El archivo se ha descargado correctamente",
+    });
   };
 
   const loadCandidateDetails = async (candidateId: string) => {
@@ -365,13 +566,25 @@ const AssessmentDetails = () => {
                             </div>
                             
                             {candidate.completed_at && (
-                              <Collapsible open={isExpanded} onOpenChange={() => toggleCandidateExpansion(candidate.id)}>
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" className="w-full mt-4 justify-between">
-                                    <span>Ver respuestas detalladas</span>
-                                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              <>
+                                <div className="flex gap-2 mt-4">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    className="flex-1"
+                                    onClick={() => downloadCandidatePDF(candidate)}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Descargar PDF
                                   </Button>
-                                </CollapsibleTrigger>
+                                </div>
+                                <Collapsible open={isExpanded} onOpenChange={() => toggleCandidateExpansion(candidate.id)}>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" className="w-full mt-2 justify-between">
+                                      <span>Ver respuestas detalladas</span>
+                                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    </Button>
+                                  </CollapsibleTrigger>
                                 <CollapsibleContent className="mt-4 space-y-3">
                                   {details.length === 0 ? (
                                     <div className="text-center py-4">
@@ -470,6 +683,7 @@ const AssessmentDetails = () => {
                                   )}
                                 </CollapsibleContent>
                               </Collapsible>
+                              </>
                             )}
                           </CardContent>
                         </Card>
