@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,27 +12,29 @@ import AssessmentDetails from "./pages/AssessmentDetails";
 import TakeAssessment from "./pages/TakeAssessment";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/create-assessment" element={<CreateAssessment />} />
-          <Route path="/assessment/:id" element={<AssessmentDetails />} />
-          <Route path="/take/:shareLink" element={<TakeAssessment />} />
-          <Route path="/take-assessment/:shareLink" element={<TakeAssessment />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [queryClient] = React.useState(() => new QueryClient());
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/create-assessment" element={<CreateAssessment />} />
+            <Route path="/assessment/:id" element={<AssessmentDetails />} />
+            <Route path="/take/:shareLink" element={<TakeAssessment />} />
+            <Route path="/take-assessment/:shareLink" element={<TakeAssessment />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
