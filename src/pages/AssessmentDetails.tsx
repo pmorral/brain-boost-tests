@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Copy, ExternalLink, Loader2, Users, Award, ChevronDown, ChevronUp, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, Loader2, Users, Award, ChevronDown, ChevronUp, CheckCircle2, XCircle, Download } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const AssessmentDetails = () => {
   const { id } = useParams();
@@ -365,13 +367,31 @@ const AssessmentDetails = () => {
                             </div>
                             
                             {candidate.completed_at && (
-                              <Collapsible open={isExpanded} onOpenChange={() => toggleCandidateExpansion(candidate.id)}>
-                                <CollapsibleTrigger asChild>
-                                  <Button variant="ghost" className="w-full mt-4 justify-between">
-                                    <span>Ver respuestas detalladas</span>
-                                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              <>
+                                <div className="flex gap-2 mt-4">
+                                  <Button 
+                                    variant="outline" 
+                                    className="flex-1"
+                                    onClick={() => downloadCandidatePDF(candidate)}
+                                  >
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Descargar PDF
                                   </Button>
-                                </CollapsibleTrigger>
+                                </div>
+                                <Collapsible open={isExpanded} onOpenChange={() => toggleCandidateExpansion(candidate.id)}>
+                                  <CollapsibleTrigger asChild>
+                                    <Button variant="ghost" className="w-full mt-2 justify-between">
+                                      <span>Ver respuestas detalladas</span>
+                                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    </Button>
+                                  </CollapsibleTrigger>
+                                  <CollapsibleContent className="mt-4 space-y-3">
+                                    {details.length === 0 ? (
+                                      <div className="text-center py-4">
+                                        <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                                      </div>
+                                    ) : (
+                                      <>
                                 <CollapsibleContent className="mt-4 space-y-3">
                                   {details.length === 0 ? (
                                     <div className="text-center py-4">
