@@ -201,6 +201,42 @@ const CreateAssessment = () => {
         // Don't fail the whole process if notifications fail
       }
 
+      // Send data to Notion/ATS endpoint
+      try {
+        const notionData = {
+          id: assessment.id,
+          data: {
+            Email: user ? user.email : creatorEmail,
+            Origen: "Puntu.ai",
+            "Interés en Productos": ["Headhunting"],
+            Estado: "Nuevo",
+            "Última Interacción": new Date().toISOString().split('T')[0]
+          } as any
+        };
+
+        // Add optional fields if available
+        if (creatorName) {
+          notionData.data.Nombre = creatorName;
+        }
+        if (company) {
+          notionData.data.Empresa = [company];
+        }
+        if (assessmentType === "skills" && title) {
+          notionData.data.Cargo = title;
+        }
+
+        await fetch('https://api-ats-dev.lapieza.io/v1/notion/create-data', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(notionData)
+        });
+      } catch (notionError) {
+        console.error("Error sending data to Notion:", notionError);
+        // Don't fail the whole process if Notion call fails
+      }
+
       if (user) {
         toast({
           title: "¡Evaluación creada!",
