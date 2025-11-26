@@ -17,62 +17,6 @@ serve(async (req) => {
   }
   console.log("version: 1.0.0");
 
-  try {
-    const {
-      candidateName,
-      candidateEmail,
-      assessmentTitle,
-      assessmentType,
-      psychometricType,
-      score,
-      totalQuestions,
-      completedAt,
-      reason,
-    } = await req.json();
-
-    console.log("Sending candidate completion notifications for:", candidateName, reason ? `(reason: ${reason})` : "");
-
-    // Prepare data for notifications
-    const assessmentTypeLabel = assessmentType === "skills" ? "Hard & Soft Skills" : "Prueba Psicométrica";
-    const scoreDisplay = score !== null ? `${score}/${totalQuestions}` : "Análisis pendiente";
-    const isExit = reason === "tab_exit";
-
-    // Send Slack notification
-    try {
-      console.log("Slack webhook URL:", SLACK_WEBHOOK_URL ? "configured" : "not configured");
-      if (!SLACK_WEBHOOK_URL) {
-        console.error("SLACK_WEBHOOK_URL secret is not set");
-        throw new Error("Missing SLACK_WEBHOOK_URL");
-      }
-
-      const slackText = isExit
-        ? `⚠️ *Evaluación Finalizada por Salida*\n\n*Candidato:* ${candidateName}\n*Email:* ${candidateEmail}\n*Evaluación:* ${assessmentTitle}\n*Tipo:* ${assessmentTypeLabel}\n*Puntaje:* ${scoreDisplay}\n*Finalizado:* ${new Date(completedAt).toLocaleString("es-MX")}\n*Motivo:* Salida de pestaña${psychometricType ? `\n*Test Psicométrico:* ${psychometricType}` : ""}`
-        : `✅ *Candidato Completó Evaluación*\n\n*Candidato:* ${candidateName}\n*Email:* ${candidateEmail}\n*Evaluación:* ${assessmentTitle}\n*Tipo:* ${assessmentTypeLabel}\n*Puntaje:* ${scoreDisplay}\n*Completado:* ${new Date(completedAt).toLocaleString("es-MX")}${psychometricType ? `\n*Test Psicométrico:* ${psychometricType}` : ""}`;
-
-      const slackMessage = {
-        text: slackText,
-      };
-
-      console.log("Sending Slack message:", slackMessage);
-
-      const slackResponse = await fetch(SLACK_WEBHOOK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(slackMessage),
-      });
-
-      if (!slackResponse.ok) {
-        const errorText = await slackResponse.text();
-        console.error("Error sending Slack notification:", errorText);
-      } else {
-        console.log("Slack notification sent successfully");
-      }
-    } catch (slackError) {
-      console.error("Error with Slack:", slackError);
-    }
-
     // Send Google Sheets notification
     try {
       const sheetsData = {
