@@ -34,6 +34,7 @@ const CreateAssessment = () => {
   const [description, setDescription] = useState("");
   const [language, setLanguage] = useState<"es" | "en">("es");
   const [creatorEmail, setCreatorEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -44,6 +45,32 @@ const CreateAssessment = () => {
     };
     checkAuth();
   }, []);
+
+  const PERSONAL_EMAIL_DOMAINS = [
+    'gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com',
+    'icloud.com', 'aol.com', 'live.com', 'msn.com',
+    'protonmail.com', 'mail.com', 'yandex.com', 'zoho.com'
+  ];
+
+  const isPersonalEmail = (email: string): boolean => {
+    const domain = email.split('@')[1]?.toLowerCase();
+    return PERSONAL_EMAIL_DOMAINS.includes(domain);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const email = e.target.value;
+    setCreatorEmail(email);
+    
+    if (email && email.includes('@')) {
+      if (isPersonalEmail(email)) {
+        setEmailError("Por favor, usa un correo corporativo. No se permiten correos personales como Gmail, Hotmail, Yahoo, etc.");
+      } else {
+        setEmailError("");
+      }
+    } else {
+      setEmailError("");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,6 +99,16 @@ const CreateAssessment = () => {
         toast({
           title: "Error",
           description: "Email inválido",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!user && isPersonalEmail(creatorEmail)) {
+        toast({
+          title: "Error",
+          description: "Por favor, usa un correo corporativo. No se permiten correos personales.",
           variant: "destructive",
         });
         setLoading(false);
@@ -312,13 +349,20 @@ const CreateAssessment = () => {
                     id="email"
                     type="email"
                     value={creatorEmail}
-                    onChange={(e) => setCreatorEmail(e.target.value)}
-                    placeholder="tu@email.com"
+                    onChange={handleEmailChange}
+                    placeholder="tu@empresa.com"
                     required={!isAuthenticated}
+                    className={emailError ? "border-destructive" : ""}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Podrás ver los resultados iniciando sesión con este email
-                  </p>
+                  {emailError ? (
+                    <p className="text-xs text-destructive">
+                      {emailError}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Usa tu correo corporativo para ver los resultados
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -428,7 +472,7 @@ const CreateAssessment = () => {
                   </ul>
                 </div>
 
-                <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                <Button type="submit" size="lg" className="w-full" disabled={loading || (!isAuthenticated && !!emailError)}>
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />

@@ -6,53 +6,14 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SLACK_WEBHOOK_URL = Deno.env.get("SLACK_WEBHOOK_URL") ?? "";
-const GOOGLE_SHEETS_WEBHOOK_URL =
-  "https://script.google.com/macros/s/AKfycbzalr_bQoCLtqqbCLR84QRB-BXs2gL-tBv_E1EbUgdJkzk7YrBP1xJ96FPrjYv2SiAk/exec";
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  console.log("version: 1.0.0");
 
-    // Send Google Sheets notification
-    try {
-      const sheetsData = {
-        candidateName,
-        candidateEmail,
-        assessmentTitle,
-        assessmentType: assessmentTypeLabel,
-        psychometricType: psychometricType || "N/A",
-        score: scoreDisplay,
-        totalQuestions: totalQuestions.toString(),
-        completedAt: new Date(completedAt).toISOString(),
-        status: isExit ? "Exited" : "Completed",
-        reason: isExit ? "tab_exit" : "completed",
-      };
-      console.log("Sending to Google Sheets:", sheetsData);
-
-      const sheetsResponse = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(sheetsData),
-      });
-
-      if (!sheetsResponse.ok) {
-        const errorText = await sheetsResponse.text();
-        console.error("Error sending to Google Sheets:", errorText);
-      } else {
-        const responseData = await sheetsResponse.text();
-        console.log("Google Sheets notification sent successfully:", responseData);
-      }
-    } catch (sheetsError) {
-      console.error("Error with Google Sheets:", sheetsError);
-    }
-
-    return new Response(JSON.stringify({ success: true, message: "Notifications sent" }), {
+  try {
+    return new Response(JSON.stringify({ success: true, message: "Function deprecated" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
